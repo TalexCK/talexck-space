@@ -42,7 +42,20 @@ export default defineThemeConfig({
   /* 站点页脚 */
   footer: {
     message: 'TalexCK\'s Space',
-    copyright: 'CC BY-NC-SA 4.0 | Alex Tang | 2026',
+    copyright: `
+      <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
+        target="_blank"
+        rel="noopener noreferrer">
+        CC BY-NC-SA 4.0
+      </a>
+      | 
+      <a href="https://blog.talexck.com"
+        target="_blank"
+        rel="noopener noreferrer">
+        Alex Tang
+      </a>
+      | 2026
+    `,
   },
 
   /* 过渡动画 @see https://theme-plume.vuejs.press/config/theme/#transition */
