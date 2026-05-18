@@ -20,7 +20,7 @@ import { enNavbar, zhNavbar } from './navbar'
 export default defineThemeConfig({
   logo: 'https://theme-plume.vuejs.press/plume.png',
 
-  appearance: true,  // 配置 深色模式
+  appearance: false,  // 配置 深色模式
 
   social: [
     { icon: 'github', link: '/' },
@@ -33,24 +33,24 @@ export default defineThemeConfig({
    * 文章版权信息
    * @see https://theme-plume.vuejs.press/guide/features/copyright/
    */
-  // copyright: true,
+  copyright: true,
 
-  // prevPage: true,   // 是否启用上一页链接
-  // nextPage: true,   // 是否启用下一页链接
-  // createTime: true, // 是否显示文章创建时间
+  prevPage: true,   // 是否启用上一页链接
+  nextPage: true,   // 是否启用下一页链接
+  createTime: true, // 是否显示文章创建时间
 
   /* 站点页脚 */
-  // footer: {
-  //   message: 'Power by <a target="_blank" href="https://v2.vuepress.vuejs.org/">VuePress</a> & <a target="_blank" href="https://theme-plume.vuejs.press">vuepress-theme-plume</a>',
-  //   copyright: '',
-  // },
+  footer: {
+    message: 'TalexCK\'s Space',
+    copyright: 'CC BY-NC-SA 4.0 | Alex Tang | 2026',
+  },
 
   /* 过渡动画 @see https://theme-plume.vuejs.press/config/theme/#transition */
-  // transition: {
-  //   page: true,        // 启用 页面间跳转过渡动画
-  //   postList: true,    // 启用 博客文章列表过渡动画
-  //   appearance: 'fade',  // 启用 深色模式切换过渡动画, 或配置过渡动画类型
-  // },
+  transition: {
+    page: true,        // 启用 页面间跳转过渡动画
+    postList: true,    // 启用 博客文章列表过渡动画
+    appearance: 'fade',  // 启用 深色模式切换过渡动画, 或配置过渡动画类型
+  },
 
   locales: {
     '/': {
