@@ -59,7 +59,7 @@ export default defineThemeConfig({
        */
       profile: {
         avatar: 'https://theme-plume.vuejs.press/plume.png',
-        name: 'TalexCK&#x27;s Space',
+        name: 'TalexCK\'s Space',
         description: 'A Space for Alex Tang',
         // circle: true,
         // location: '',
@@ -86,7 +86,7 @@ export default defineThemeConfig({
        */
       profile: {
         avatar: 'https://theme-plume.vuejs.press/plume.png',
-        name: 'TalexCK&#x27;s Space',
+        name: 'TalexCK\'s Space',
         description: 'A Space for Alex Tang',
         // circle: true,
         // location: '',

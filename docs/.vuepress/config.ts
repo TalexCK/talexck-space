@@ -18,12 +18,12 @@ export default defineUserConfig({
   lang: 'zh-CN',
   locales: {
     '/': {
-      title: 'TalexCK&#x27;s Space',
+      title: 'TalexCK\'s Space',
       lang: 'zh-CN',
       description: 'A Space for Alex Tang',
     },
     '/en/': {
-      title: 'TalexCK&#x27;s Space',
+      title: 'TalexCK\'s Space',
       lang: 'en-US',
       description: 'A Space for Alex Tang',
     },
@@ -117,7 +117,6 @@ export default defineUserConfig({
     //   codeSandbox: true,  // 启用嵌入 codeSandbox 语法 @[codeSandbox](id)
     //   jsfiddle: true,     // 启用嵌入 jsfiddle 语法 @[jsfiddle](user/id)
     //   npmTo: true,        // 启用 npm-to 容器  ::: npm-to
-    //   demo: true,         // 启用 demo 容器  ::: demo
     //   collapse: true,     // 启用折叠容器  ::: collapse
     //   repl: {             // 启用 代码演示容器
     //     go: true,         // ::: go-repl
