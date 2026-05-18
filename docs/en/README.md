@@ -5,12 +5,12 @@ config:
   -
     type: hero
     full: true
-    forceDark: true
+    forceDark: false
     effect: lightning
     hero:
       name: Theme Plume
-      tagline: VuePress Next Theme
-      text: A simple, feature-rich, document & blog
+      tagline: Record some technology, ctf, hpc and more
+      text: Alex Tang's Personal Space, for personal records
       actions:
         -
           theme: brand
@@ -19,5 +19,5 @@ config:
         -
           theme: alt
           text: Github →
-          link: https://github.com/pengzhanbo/vuepress-theme-plume
+          link: https://github.com/TalexCK
 ---

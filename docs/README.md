@@ -5,7 +5,7 @@ config:
   -
     type: hero
     full: true
-    forceDark: true
+    forceDark: false
     effect: lightning
     hero:
       name: TalexCK's Space
