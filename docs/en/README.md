@@ -6,7 +6,7 @@ config:
     type: hero
     full: true
     forceDark: false
-    effect: lightning
+    effect: dot-grid
     hero:
       name: Theme Plume
       tagline: Record some technology, ctf, hpc and more

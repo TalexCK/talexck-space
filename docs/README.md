@@ -6,7 +6,7 @@ config:
     type: hero
     full: true
     forceDark: false
-    effect: lightning
+    effect: dot-grid
     hero:
       name: TalexCK's Space
       tagline: 记录技术、CTF、HPC 与一些折腾
