@@ -61,26 +61,46 @@ const zhMinecraftDocs = defineCollection({
       collapsed: false,
       items: [
         { text: '平台选择', link: 'platform' },
-        { text: '基础组件', link: 'install' },
       ],
     },
     {
-      text: '服务器搭建',
+      text: 'Minigames',
       icon: 'lucide:cable',
       collapsed: false,
       items: [
-        { text: '服务端配置', link: 'intro' },
-        { text: '安装指南', link: 'install' },
+        { text: '首页', link: 'minigames/' },
       ],
     },
     {
-      text: '运维维护',
-      icon: 'lucide:wrench',
+      text: '方块校园',
+      icon: 'lucide:blocks',
       collapsed: false,
       items: [
-        { text: '备份策略', link: 'backup' },
-        { text: '端口配置', link: 'ports' },
-        { text: '反向代理', link: 'reverse-proxy' },
+        { text: '首页', link: 'school/' },
+      ],
+    },
+    {
+      text: '生存服',
+      icon: 'lucide:blocks',
+      collapsed: false,
+      items: [
+        { text: '首页', link: 'survival/' },
+      ],
+    },
+    {
+      text: 'GameVoting 文档',
+      icon: 'lucide:vote',
+      collapsed: false,
+      items: [
+        { text: '首页', link: 'gamevoting/' },
+      ],
+    },
+    {
+      text: 'WorldGit 文档',
+      icon: 'lucide:earth',
+      collapsed: false,
+      items: [
+        { text: '首页', link: 'worldgit/' },
       ],
     },
   ],
