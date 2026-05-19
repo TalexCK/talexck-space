@@ -6,7 +6,7 @@ tags:
   - OS
   - Project
 contributors:
-  - username: Honahec
+  - Honahec
 ---
 
 > [!INFO]
