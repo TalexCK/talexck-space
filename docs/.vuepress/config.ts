@@ -49,7 +49,6 @@ export default defineUserConfig({
     /* 页内信息 */
     // editLink: true,
     lastUpdated: { dateStyle: 'short', timeStyle: 'short' } as LastUpdatedOptions,
-    contributors: true,
     // changelog: false,
 
     /**
@@ -179,6 +178,14 @@ export default defineUserConfig({
      */
     llmstxt: {
       locale: 'all',  // 为所有语言生成 llms 友好内容
+    },
+    contributors: {
+      mode: 'block',
+    },
+
+    plugins: {
+      // 如果您在此处直接声明为 true，则表示开发环境和生产环境都启用该功能
+      git: process.env.NODE_ENV === 'production'
     }
   }),
 })

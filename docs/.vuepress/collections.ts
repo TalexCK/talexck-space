@@ -46,12 +46,55 @@ const zhBlog = defineCollection({
   pagination: 15, // 每页显示文章数量
 })
 
+const zhMinecraftDocs = defineCollection({
+  // doc 类型用于成体系的文档集合，页面左侧会显示专属侧边栏
+  type: 'doc',
+  // 文档集合所在目录，相对于 `docs/`
+  dir: 'docs/minecraft',
+  title: 'Minecraft 文档',
+  linkPrefix: '/docs/minecraft/',
+  sidebar: [
+    { text: '首页', link: '/docs/minecraft/' },
+    {
+      text: '准备工作',
+      icon: 'lucide:pickaxe',
+      collapsed: false,
+      items: [
+        { text: '平台选择', link: 'platform' },
+        { text: '基础组件', link: 'install' },
+      ],
+    },
+    {
+      text: '服务器搭建',
+      icon: 'lucide:cable',
+      collapsed: false,
+      items: [
+        { text: '服务端配置', link: 'intro' },
+        { text: '安装指南', link: 'install' },
+      ],
+    },
+    {
+      text: '运维维护',
+      icon: 'lucide:wrench',
+      collapsed: false,
+      items: [
+        { text: '备份策略', link: 'backup' },
+        { text: '端口配置', link: 'ports' },
+        { text: '反向代理', link: 'reverse-proxy' },
+      ],
+    },
+  ],
+  sidebarCollapsed: false,
+  sidebarScrollbar: true,
+})
+
 /**
  * 导出所有的 collections
- *  (zhBlog 用于中文博客文章列表)
+ *  (zhBlog 用于中文博客文章列表，zhMinecraftDocs 用于 Minecraft 文档侧边栏)
  */
 export const zhCollections = defineCollections([
   zhBlog,
+  zhMinecraftDocs,
 ])
 
 /* =================== locale: en-US ======================= */

