@@ -20,7 +20,7 @@ import { enNavbar, zhNavbar } from './navbar'
 export default defineThemeConfig({
   logo: '/icon.svg',
 
-  appearance: false,  // 配置 深色模式
+  appearance: true,  // 配置 深色模式
 
   social: [
     { icon: 'github', link: '/' },

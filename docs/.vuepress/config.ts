@@ -46,6 +46,8 @@ export default defineUserConfig({
     docsDir: 'docs',
     docsBranch: 'main',
 
+    appearance: true,
+
     /* 页内信息 */
     // editLink: true,
     lastUpdated: { dateStyle: 'short', timeStyle: 'short' } as LastUpdatedOptions,

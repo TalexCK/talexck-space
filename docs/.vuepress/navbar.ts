@@ -10,8 +10,18 @@ export const zhNavbar = defineNavbarConfig([
   { text: '首页', link: '/' },
   { text: '博客', link: '/blog/' },
   {
-    text: 'Minecraft 文档',
-    link: '/docs/minecraft/',
+    text: '文档',
+    items: [
+      {
+        text: 'Minecraft 文档',
+        items: [
+          {
+            text: '首页',
+            link: '/docs/minecraft/',
+          },
+        ],
+      },
+    ]
   },
   { text: '标签', link: '/blog/tags/' },
   { text: '归档', link: '/blog/archives/' },
