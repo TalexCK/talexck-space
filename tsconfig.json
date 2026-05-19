@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "bundler",
+    "types": ["node", "vite/client"],
+    "strict": true,
+    "jsx": "preserve",
+    "skipLibCheck": true
+  },
+  "include": [
+    "docs/**/*.ts",
+    "docs/**/*.vue",
+    "docs/**/*.d.ts",
+    "docs/.vuepress/**/*.ts",
+    "docs/.vuepress/**/*.vue",
+    "docs/.vuepress/**/*.d.ts"
+  ]
+}

