@@ -49,7 +49,7 @@ export default defineThemeConfig({
         CC BY-NC-SA 4.0
       </a>
       | 
-      <a href="https://blog.talexck.com"
+      <a href="https://www.talexck.com"
         target="_blank"
         rel="noopener noreferrer">
         Alex Tang

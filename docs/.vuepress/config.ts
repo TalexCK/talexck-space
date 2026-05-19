@@ -39,12 +39,12 @@ export default defineUserConfig({
 
   theme: plumeTheme({
     /* 添加您的部署域名, 有助于 SEO, 生成 sitemap */
-    hostname: 'https://blog.talexck.com',
+    hostname: 'https://www.talexck.com',
 
     /* 文档仓库配置，用于 editLink */
-    // docsRepo: '',
-    // docsDir: 'docs',
-    // docsBranch: '',
+    docsRepo: 'TalexCK/talexck-space',
+    docsDir: 'docs',
+    docsBranch: 'main',
 
     /* 页内信息 */
     // editLink: true,
