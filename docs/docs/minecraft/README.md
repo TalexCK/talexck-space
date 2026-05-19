@@ -13,10 +13,13 @@ permalink: /docs/minecraft/
 - SHTechCraft Minigames 群组服务器
 - 方块校园服务器
 - Minecraft 1.26.1.2 生存服务器
+- GameVoting 插件
+- WorldGit 插件
 
-本文档主要供后续维护人员查阅，也可作为搭建与运维 Minecraft 服务器时的参考资料。
+本文档供后续维护人员查阅，也可作为搭建与维护 Minecraft 服务器时的参考资料。
 
 ## 文档目录
 
-- [服务端配置](./intro.md)
-- [服务端安装](./install.md)
+准备工作:
+
+- [平台选择](./platform.md)
