@@ -8,7 +8,7 @@ config:
     forceDark: false
     effect: dot-grid
     hero:
-      name: Theme Plume
+      name: TalexCK's Space
       tagline: Record some technology, ctf, hpc and more
       text: Alex Tang's Personal Space, for personal records
       actions:

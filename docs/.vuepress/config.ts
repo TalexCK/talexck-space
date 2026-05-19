@@ -68,8 +68,12 @@ export default defineUserConfig({
       title: true,      // 是否生成标题
     },
 
-    /* 本地搜索, 默认启用 */
-    search: { provider: 'local' },
+    search: { 
+      provider: 'algolia',
+      appId: 'EPAUWDYFL1',
+      apiKey: '887f805077eb486aedbe32039325cd56',
+      indexName: 'Blog Website',
+    },
 
     /**
      * Algolia DocSearch
