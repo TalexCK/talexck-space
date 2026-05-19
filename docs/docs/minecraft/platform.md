@@ -21,4 +21,3 @@ permalink: /docs/minecraft/platform/
 ## MacOS / Linux
 
 我们使用 Mac Mini (MacOS) 和 Linux (NixOS, Debain) 服务器进行开服。
-

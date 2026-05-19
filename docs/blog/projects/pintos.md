@@ -1,0 +1,420 @@
+---
+title: Stanford-CS140 Operating System Project 随记
+createTime: 2026/05/19 21:59:37
+permalink: /blog/pintos/
+tags:
+  - OS
+  - Project
+contributors:
+  - username: Honahec
+---
+
+> [!INFO]
+> 本文为我在完成 ==ShanghaiTech CS130 project (Stanford CS140 project)== 时的学习与思考。
+
+> [!warning]
+> 为遵守 ShanghaiTech 学生学术诚信规范，各 project 的代码相关部分将在本 project 提交 ddl 结束后上传。
+
+## 关于 project
+
+[Stanford CS140 Project](https://www.scs.stanford.edu/10wi-cs140/pintos/pintos_1.html#SEC1)
+
+简单来说，本 project 提供了一个基本的 PintOS 系统，你需要根据题目对本系统进行修改、优化等，并通过每个子 project 的测试点。
+
+我将其提供的 PintOS 系统进行了 docker 打包，运行在一个 Ubuntu 系统中，以使协作更顺利：[链接](https://github.com/Honahec/pintos-ubuntu-docker)
+
+## project 1: Threads
+
+[doc](https://www.scs.stanford.edu/10wi-cs140/pintos/pintos_2.html#SEC15)
+
+在这个项目中，提供了一个功能及其基础的线程系统，我们需要扩展它的功能。
+
+### Alarm Clock
+
+- 问题：系统现有的 `timer_sleep()` 函数（在 `devices/timer.c`）下使用的是 busy waiting，即不断循环直至 sleep 结束。
+
+那么我们为了解决这个问题，可以考虑在线程进入睡眠时添加到一个 `waiting_list` 队列中（这个队列按照 wakeup 顺序排序），并将此线程 `thread_block()` 掉，由 `interrupt` 在每个时钟周期检测列表头是否应该苏醒，并逐个 `thread_unblock()` 直至列表头不再需要唤醒。
+
+思路很简单，剩下的就是代码细节的问题：
+
+1. 我们需要注意普通线程和 interrupt 线程的并发冲突问题，由于 `waiting_list` 需要在 `timer_sleep()` 函数（由普通线程调用）和 `timer_interrupt()` 函数（由 interrupt 线程调用）中同时被使用，我们需要在 `timer_sleep()` 操作该队列之前禁用 interrupt。
+2. 你会发现完成后始终有一个 `alarm-priority` 测试点 fail 掉，阅读测试点 c 代码可发现其需要优先级调度（本 project part2，我至今不理解为什么要把这个 part 排在 Priority Scheduling 前面），其对本 part 代码的影响就是在 interrupt 线程中只要唤醒了线程，就需要进行 `intr_yield_on_return()`（即将正在进行的线程扔回 `ready_list`，并按照优先级重新取出）
+
+另外，你会发现在不对提供的 PintOS 做任何修改的情况下，仍可以通过 part1 的所有测试点...
+
+### Priority Scheduling
+
+1. ==Standard==：实现严格的优先级调度机制。
+   - 当一个具有更高优先级的线程加入到 `ready_list` 中时，正在运行的低优先级线程需要 `thread_yield()` 让出 CPU 资源。
+   - 当多个线程在等待锁（lock）、信号量（semaphore）或条件变量（condition variable）时，一旦资源释放，优先级最高的等待线程应当被优先唤醒。
+
+这个 part 比上一个复杂了一些，主要在于提出了很多模糊的术语，我们需要理解 lock, semaphore 和 condition variable 都是什么。
+
+总体来说，我们可以将这三个名词从底层到高层排序，分别是 semaphore -> lock -> condition variable。
+
+下面我们简单介绍一下这三个东西。
+
+#### semaphore
+
+核心是计数器+阻塞队列。
+
+```c
+struct semaphore {
+    unsigned value;
+    struct list waiters;
+}
+```
+
+它可以管理有限数量的资源。
+
+我们可以使用 `sema_down(s)` 和 `sema_up(s)` 函数对资源进行获取、释放，若获取时无对应资源则阻塞直到提供资源给该线程。
+
+#### lock
+
+本质上是一种 `semaphore(1)`。
+
+例如我们分配一片共享内存，多个线程可以操作这片内存，就必须对此内存进行 lock 以避免 race condition。
+
+#### condition variable
+
+多个线程等待某个条件成立后被唤醒。
+
+好了，现在对这三个名词有了基本理解后思考一种情况：如果某个 lock 被一个低优先级线程拥有，又有一个高优先级线程进入了 `ready_list`，且希望拥有这个 lock，受 semaphore 的限制，它需要等待低优先级线程运行完释放 lock 才能被唤醒，若此时有一堆不需要该锁的中优先级线程加入，则一直不会运行原本就应该先运行的高优先级线程，这是我们不想看到的。
+
+于是引出了该 part 的第二个任务：
+
+2. ==Priority Donation==
+   - 线程拥有锁后，其优先级应为持有锁的优先级（定义锁的优先级为该锁等待队列线程和持有线程的优先级最大值）。
+   - 另外，我们不难发现会出现会出现递归现象，那么整条需求链路上的线程优先级都应该被调整。
+   - 当锁被释放后，原本持有该锁的线程优先级应被更新，其可能会被 `thread_yield()`。
+
+代码实现起来并不算难，难点在于理解上述概念（不知道我的表述是否足够清晰了）。
+
+### Advanced Scheduler
+
+- 实现一个类似于 4.4 BSD 操作系统的==多级反馈队列调度器 (Multilevel Feedback Queue Scheduler, MLFQS)==，以降低系统的平均响应时间。
+
+#### 什么是 BSD？
+
+BSD 调度器的目标是在==没有外部优先级信息==的情况下，自动实现公平调度和良好的交互性响应。
+
+关键在于：
+
+1. 动态优先级
+
+   不像简单的优先级调度器需要手动设置优先级，BSD 调度器会根据线程的行为自动调整优先级：
+   - CPU 密集型任务（计算多）→ 优先级降低
+   - I/O 密集型任务（交互多）→ 优先级提高
+
+2. 指标
+   - recent_cpu（最近 CPU 使用量）
+   - nice 值：用户可设置（-20~20），nice 值越高 = 越"友好" = 优先级越低
+   - load_avg （系统负载，影响 recent_cpu 衰减速度）
+
+具体实现 [doc](https://www.scs.stanford.edu/10wi-cs140/pintos/pintos_7.html#SEC131)
+
+## Project 2: User Program
+
+[doc](https://www.scs.stanford.edu/10wi-cs140/pintos/pintos_3.html#SEC32)
+
+Project 2 需要能够让程序通过 System Call 与操作系统交互，让操作系统能够处理程序的错误。
+
+完成 Project 2 的时候需要注意可能带来影响的 bug，因为未来 Project 3 和 Project 4 都将基于 Project 2 的代码实现。
+
+### System Call
+
+PintOS 中，用户程序发起 system call 时，会把系统调用号和参数放在用户栈上。进入内核后，`syscall_handler()` 可以通过 `f->esp` 找到这些参数。
+
+因此，一个 system call 的处理流程大致是：
+
+1. 从用户栈中读取 syscall number；
+2. 根据 syscall number 判断是哪一个系统调用；
+3. 从用户栈继续读取对应参数；
+4. 验证所有用户传入的指针是否合法；
+5. 调用内核中的实际处理函数；
+
+#### 用户指针验证
+
+这部分文档中提及了两个方法，我们采用的是第二种方法：依赖页错误（page fault）机制进行检查。文档中提供的`get_user`和`put_user`函数，会尝试从用户地址读取或写入一个字节。如果访问失败，就返回错误，并让当前用户进程以 `-1` 退出。
+
+我们基于`get_user`封装了两个函数
+
+- `user_read (void *kaddr, const void *uaddr, size_t size)`
+
+  从`uaddr`读入`size`长度的内容到`kaddr`，成功读入则返回`true`，反之返回`false`。
+
+- ``user_string (char *kaddr, const void *uaddr, size_t max_size)`
+
+  从`uaddr`读入最多`max_size`长度的字符串到`kaddr`，成功读入则返回`true`，反之返回`false`。
+
+借助这两个函数，大多数 syscall 在访问用户内存时，只需调用对应的辅助函数即可完成用户指针验证，而无需手动检查页表映射或地址合法性。
+
+不过 `SYS_READ` 是一个特殊情况。由于该 syscall 需要向用户提供的 `buffer` 中写入数据，因此不仅要保证地址可读，还必须保证其可写。对此，我们使用 `put_user` 对 `buffer` 覆盖范围内的地址逐字节尝试写入 `0`。若写入过程中未发生异常，则说明该缓冲区可写，从而完成验证。
+
+#### File Syscalls
+
+这里比较重要的是文件描述符，也就是 fd。用户程序拿到的 fd 只是一个整数，而真正的文件对象是内核中的 `struct file *`。因此我们需要在每个进程中维护一个 fd table，用来把用户态的 fd 映射到内核态的文件对象。
+
+另外，所有涉及文件系统的操作都需要注意同步问题。PintOS 提供的文件系统本身并不是完全线程安全的，如果多个进程同时读写文件，可能会出现 race condition。因此我们使用一个全局的 `filesys_lock` 来保护文件系统操作。
+
+#### `process_wait` / `process_execute`
+
+这两个函数在 `process.c` 中，syscall 会通过它们实现 `exec` 和 `wait`。
+
+其中 `exec` 对应 `process_execute()`，作用是创建并启动一个新的用户进程；`wait` 对应 `process_wait()`，作用是让父进程等待某个子进程结束，并获得它的退出状态。
+
+这部分的核心问题是：==父进程和子进程之间需要共享一部分状态==。
+
+因为父进程调用 `exec()` 之后，只会得到一个子进程的 `tid`。但是仅有 `tid` 是不够的，后续还需要：
+
+- 知道子进程是否成功加载
+- 知道子进程是否已经退出
+- 知道子进程的退出状态码
+- 等待子进程退出 / 加载
+
+所以我们需要额外维护一个 `child_info` 结构体，用来记录子进程的信息。我们创建了如下结构体
+
+```c
+struct child_info {
+  tid_t tid;						/* 子进程tid */
+  int exit_status;			/* 子进程退出状态码 */
+  bool exited;					/* 子进程是否已经退出 */
+  bool loaded;					/* 子进程是否已经加载 */
+  struct list_elem elem;
+  struct semaphore wait_sema;
+  struct semaphore load_sema;
+  int count;						/* 父/子进程有几个还在，初始值为2，count=0才会free */
+  struct lock lock;
+};
+```
+
+然后我们就可以基于这些信息实现 `exec` 和 `wait` 的功能。
+
+- `process_execute`
+
+  `process_execute()` 对应 syscall 中的 `exec`。它的返回值不只表示子进程线程是否创建成功，还需要表示子进程是否成功加载了可执行文件。
+
+  因此，父进程调用 `thread_create()` 创建子进程后不能立即返回，而是需要通过 `load_sema` 等待子进程完成加载。子进程在 `load()` 结束后，会把加载结果记录到对应的 `child_info` 中，并通过 `sema_up(&child->load_sema)` 唤醒父进程。
+
+  父进程从 `sema_down(&child->load_sema)` 返回后，再检查 `child_info->loaded`。如果子进程加载成功，则返回子进程的 `tid`；如果加载失败，则返回 `-1`。
+
+- `process_wait`
+
+  `process_wait()` 对应 syscall 中的 `wait`。它需要让父进程等待指定子进程退出，并获得该子进程的退出状态。
+
+  父进程会先在自己的子进程列表中查找对应的 `child_info`。如果找不到，说明传入的 `tid` 不是当前进程的子进程，直接返回 `-1`。如果找到了对应子进程，并且子进程尚未退出，父进程就通过 `wait_sema` 阻塞等待。
+
+  子进程退出时，会把自己的退出状态写入 `child_info->exit_status`，并将 `child_info->exited` 设为 `true`，然后通过 `sema_up(&child->wait_sema)` 唤醒可能正在等待它的父进程。父进程被唤醒后，就可以读取子进程的 `exit_status`，并将其作为 `wait` 的返回值。
+
+不过这里还需要考虑资源释放的问题。父进程和子进程的退出顺序是不确定的：可能父进程先退出，也可能子进程先退出。因此，`child_info` 不能简单地只由父进程或子进程单方面释放。
+
+为了解决这个问题，我们使用 `count` 作为引用计数。父进程和子进程各自持有一份对 `child_info` 的引用。当其中一方不再需要这个结构体时，就调用 `child_release()` 将 `count` 减一。只有当父进程和子进程都不再需要它，也就是 `count` 变为 `0` 时，才真正释放这个 `child_info` 结构体。
+
+> [!WARNING]
+>
+> 如果你看到这里，说不定你已经写完了你的代码，建议你执行`make clean && make check` 5-10 次，防止可能出现的随机性 FAIL。
+
+## Project 3: Virtual Memory
+
+[doc](https://www.scs.stanford.edu/10wi-cs140/pintos/pintos_4.html#SEC53)
+
+> [!WARNING]
+>
+> Project 3 在 Project 2 的代码基础上实现，开工前尽量保证 Project 2 的正确性，否则在 Project 3 中改 Project 2 的 bug 会非常非常痛苦。
+
+Project 3 需要在 Project 2 的基础上实现一系列和内存管理相关的功能。目前用户程序运行前都要加载所有需要的页面，也没有淘汰机制，能够同时运行的程序数量和程序大小都受到物理内存大小的限制。
+
+Project 3 并没有初始的代码，所有新增的代码文件需要前往根目录下`Makefile.build`中注册。
+
+### Frame Table
+
+> [!WARNING]
+>
+> Project 3 需要处理很多地址，每次不验证`addr != NULL`都是对未来 debug 的自己不负责。
+>
+> 每次处理 Frame Table 时不加锁都是对未来 debug 的自己不负责。
+>
+> 每次发现`NULL`之后不 release 锁的更是对未来 debug 的自己不负责。
+
+参考文档 4.2 一节，我们首先需要实现 Frame Table。
+
+Frame Table 用来记录系统中已经分配出去的物理页。后续的`swap`、`mmap` 等功能都需要依赖它来查找和管理 frame，因此它是 Project 3 中虚拟内存系统的基础结构。
+
+我们的实现中，Frame Table 使用 PintOS 提供的 `list.h` 维护。这一阶段的实现可以参考 `palloc.c` 的思路，对 frame 的获取和释放进行简单封装。需要注意的是，如果一次操作中需要获取多个 frame，而中途分配失败，就必须释放之前已经成功分配的 frame，避免产生内存泄漏。
+
+此外，由于 Frame Table 是全局数据结构，可能被多个线程同时访问，因此对它的修改和遍历都需要使用 lock 保护，防止出现神奇又神秘的同步问题。
+
+### Hash Table
+
+此处我们先介绍一下哈希表。
+
+PintOS 在 `lib/kernel/hash.h` 和 `lib/kernel/hash.c` 中实现了一套通用的哈希表结构。它的作用和普通哈希表类似：通过一个 key 快速查找对应的元素，避免每次都在线性表中遍历查找。它只要求被存储的结构体中包含一个 `struct hash_elem` 字段。之后我们就可以通过这个 `hash_elem`，把自己的结构体挂到哈希表里。这和`list.h`是类似的。
+
+使用哈希表时，需要提供两个函数：
+
+1. `hash`：告诉哈希表如何根据某个字段计算哈希值；
+2. `less`：当两个元素需要比较时，告诉哈希表如何判断大小或是否相同。
+
+在实现 Supplemental Page Table 中，我们需要知道一些相关函数
+
+- `hash_insert()` 用来把一个新的元素插入哈希表中。对于 Supplemental Page Table 来说，当我们新建一个 SPT entry 后，就可以通过 `hash_insert()` 将它加入当前进程的 SPT 中。如果表中已经存在相同 `upage` 的元素，`hash_insert()` 会返回原有元素，因此也可以用它来判断是否出现了重复页面。
+
+- `hash_find()` 用来在哈希表中查找元素。它并不是直接传入 key，而是传入一个临时构造的结构体元素。比如我们想通过 `upage` 查找对应的 SPT entry，就可以先创建一个只填好 `upage` 的临时 entry，再用 `hash_find()` 查找哈希表中是否存在相同页面。
+
+### Supplemental Page Table
+
+Supplemental Page Table 用来记录用户虚拟页面的额外信息，使内核能在 `page_fault` 时判断该页面是非法访问，还是需要从文件、swap 或栈增长中按需加载。
+
+我们第二个需要实现的就是 Supplemental Page Table。这部分我们使用哈希表实现，参考`hash.h`/`hash.c`，并使用`upage`来索引。
+
+在初始步骤中，Supplemental Page Table 结构体只需要记录`upage`和`hash_elem`即可。后续步骤中，按照需要给结构体新增项即可。
+
+Supplemental Page Table 会贯穿整个 Project 3，无论是 Memory Mapped Files，还是 Swap，亦或是 Stack Growth、Eviction 的部分，都需要或多或少在 Supplemental Page Table 中添加点东西。
+
+### Lazy Loading / Memory Mapped Files
+
+> [!WARNING]
+>
+> Project 3 同样需要处理很多文件，每次不给文件操作加锁，都是对未来 debug 的自己不负责。
+>
+> 每次给文件操作 acquire 或 release 同一个锁两遍以上的，更是对未来 debug 的自己不负责。
+
+我们首先需要解释一下 Project 3 中和文件相关的页面加载到底要做什么。
+
+在 Project 2 中，`process.c` 里的 `load_segment()` 会在程序启动时直接把可执行文件中的 segment 加载到内存里。这样显然很简单，但是非常浪费空间
+
+Project 3 要解决的一个重要问题就是 ==lazy loading==。具体来说，`load_segment()` 不再立刻把文件内容读入 frame，而是先为这些用户虚拟页创建 Supplemental Page Table 来记录这个页面应该如何被加载。
+
+这样，程序启动时并不会马上占用大量物理内存。只有当用户程序真正访问某个尚未加载的页面时，才会触发 `page_fault`。此时 page fault handler 会检查 Supplemental Page Table，如果发现这个地址对应的页面是合法的、只是还没有被加载，就分配一个 frame，然后根据 SPT (Supplemental Page Table) 中记录的信息从文件中读取内容，并将这个 frame 安装到当前进程的 page table 中。
+
+我们还需要实现`mmap`和`munmap`两个 System Call。每一次`mmap`都要对应一个单独的`id`，我们可以使用结构体`mmap_entry`来保存相关信息。同时，`mmap`的文件和`thread`绑定，我们可以把相关信息储存在`thread`中。
+
+当用户程序调用 `mmap` 时，和 lazy loading 一样，操作系统不会立刻把整个文件读入内存，而是把这个文件映射到从 `addr` 开始的一段用户虚拟地址空间上。文件可能占据一个或多个 page，因此我们需要为这些 page 分别创建 Supplemental Page Table。
+
+每个被映射的页面都会记录它对应的文件、文件偏移量、需要读取的字节数以及需要补零的字节数。之后当用户程序访问这些地址时，如果对应页面还没有加载，就会触发 `page_fault`，再由内核把对应的文件内容加载进 frame。
+
+然后是`munmap`，若文件被修改，则需要写回文件系统，这里我们需要使用`pagedir_is_dirty (thread_current ()->pagedir, upage)`来判断文件是否被修改过。
+
+> [!TIP]
+>
+> 此处可以进行一次 check，确保 Memory Mapped Files 相关测试点通过。
+
+### Stack Growth
+
+Project 2 中 PintOS 只给 Stack 分配了一页的 page，这显然不够用。我们要移除这个限制。
+
+首先我们看文档，
+
+> Allocate additional pages only if they "appear" to be stack accesses.
+
+这里我们看到了一个非常神秘的词`appear`，Project 3 需要你给 Stack 额外的页面仅当“看起来像”栈指针，我们自然对这个出现在这很神秘的词语有疑问。不过既然文档说只要看起来像，那我们可以针对`page_fault`的地址作出判断，依据文档，我们可以给出如下判断条件
+
+```c
+bool if_stack_pointer = fault_addr >= stack_pointer - 32
+                        && fault_addr <= PHYS_BASE
+                        && fault_addr >= PHYS_BASE - 8 * 1024 * 1024;
+```
+
+由于`page_fault`可能由 kernel 直接触发，也可能在 user 切换到 kernel 的时候触发，而在前者我们没有办法获取`f->esp`，所以我们需要在当前`thread`中记录其栈指针。记录的时机可以在前一次 Syscall 的时候，于是
+
+```c
+void *stack_pointer = user ? f->esp : thread_current ()->esp;
+```
+
+当发生`page_fault`且我们发现这是一个`stack_pointer`的时候，我们就可以分配一页 stack page。
+
+> [!TIP]
+>
+> 此处可以进行一次 check，确保 Stack Growth 相关测试点通过。
+
+### BitMap
+
+此处我们再简单介绍一下 Bitmap。
+
+PintOS 在 `lib/kernel/bitmap.h` 和 `lib/kernel/bitmap.c` 中实现了一套位图结构。Bitmap 可以理解为一组连续的 bit，每一个 bit 只有两种状态：`true` 或 `false`。因此它非常适合用来记录某些资源是否已经被占用。
+
+在 Swap Table 中，我们可以把每一个 swap slot 看作一个编号：
+
+- 第 `0` 位表示第 `0` 个 swap slot 是否被占用；
+- 第 `1` 位表示第 `1` 个 swap slot 是否被占用；
+- 以此类推。
+
+如果某一位是 `false`，说明对应的 slot 还没有被使用；如果是 `true`，说明这个 slot 已经被分配出去了。
+
+在实现 Swap Table 时，我们需要知道一些相关函数：
+
+- `bitmap_create()` 用来创建一个指定大小的 bitmap。比如 swap 分区中一共有多少个 page-sized slot，就可以创建多少位的 bitmap。
+- `bitmap_scan_and_flip()` 用来查找一段连续的空闲 bit，并将其状态翻转。对于 swap 来说，我们通常只需要找一个空闲 slot，所以可以用它找到一个空闲位置，并立刻把这个位置标记为已经使用。
+- `bitmap_reset()` 用来把某一位重新设置为 `false`。当一个页面从 swap 中读回内存后，对应的 swap slot 就可以被释放，此时需要用 `bitmap_reset()` 把这个 slot 标记为空闲。
+- `bitmap_test()` 用来检查某一位当前的状态。它可以判断某个 slot 是否正在被使用。
+
+### Swap
+
+> [!WARNING]
+>
+> 在调用 Swap 的时候不检查是否成功的都是对未来 debug 的自己不负责。
+
+在 Project 3 中，用户程序看到的是虚拟地址空间，但真正能放在内存里的页面数量受物理内存大小限制。当 frame 不够用时，操作系统就需要选择一个暂时不用的页面，将它从物理内存中换出。如果这个页面之后还可能被访问，就不能直接丢弃，而是需要把它保存到 swap 分区中。
+
+因此，我们需要实现 Swap Table 来管理 swap 分区中哪些位置已经被使用，哪些位置仍然空闲。通常可以使用 bitmap 来记录 swap slot 的使用情况。
+
+这里需要注意，Swap 的一个 slot 并非一个 page，一个 page 对应 8 个 slot。还需要注意的是 Swap 的初始化时机。我们需要在`init.c`里面初始化 Swap，我们通过`block_get_role (BLOCK_SWAP)`获得`BLOCK_SWAP`，但是太早初始化无法获得`BLOCK_SWAP`，太晚初始化会让系统跑起来了之后还没初始化 Swap，都会出事。
+
+### Eviction & Reclamation
+
+这里我们需要实现一套页面淘汰和页面恢复的机制。
+
+在 Project 3 中，用户程序使用的是虚拟地址空间，但真正的物理内存大小是有限的。当没有空闲 frame 可以分配时，操作系统就不能简单地失败，而是需要从当前已经使用的 frame 中选择一个暂时不用的页面，将它从物理内存中淘汰出去，这个过程就是 eviction。
+
+但是，被淘汰的页面不能随便直接丢弃。不同来源的页面需要用不同的方式处理，否则之后用户程序再次访问这个页面时，就无法恢复出正确内容。
+
+因此，我们首先需要在 Supplemental Page Table 中记录页面的类型，例如：
+
+```c
+enum spt_type {
+  PAGE_MMAP,
+  PAGE_EXEC,
+  PAGE_STACK,
+  PAGE_OTHER
+};
+```
+
+这样在淘汰页面时，就可以根据页面类型决定它应该被如何保存。
+
+对于通过 `mmap` 映射的文件页面，如果页面被修改过，也就是 dirty bit 被设置过，那么在淘汰时需要把页面内容写回原文件；如果页面没有被修改，则可以直接丢弃，因为之后还可以从原文件重新读入。
+
+对于 `exec` 相关的页面，也就是从可执行文件中 lazy loading 得到的页面，如果页面没有被修改，同样可以直接丢弃，之后 page fault 时重新从可执行文件加载即可。但是如果这个页面被修改过，就不能再简单地从原文件恢复了，因为原文件中的内容已经不是当前页面的最新内容。这种情况下就需要把页面写入 swap。
+
+对于 stack page，它没有对应的文件作为后备存储，因此一般不能直接丢弃。即使页面当前没有被标记为 dirty，为了保证程序之后仍然能看到正确的栈内容，比较稳妥的做法也是将其写入 swap。
+
+所以整体来说，淘汰页面时可以按照下面的思路处理：
+
+- `PAGE_MMAP`：dirty 时写回文件，不 dirty 时可以直接丢弃；
+- `PAGE_EXEC`：不 dirty 时可以从原文件恢复，dirty 时需要 swap；
+- `PAGE_STACK`：通常需要 swap；
+- `PAGE_OTHER`：如果没有可靠的文件后备，也应该 swap。
+
+完成页面内容的保存后，还需要清除原来的 page table 映射，并更新 SPT entry 的状态。比如被换出到 swap 的页面，需要在 SPT 中记录对应的 swap slot；被直接丢弃的文件页面，则需要保留 file、offset、read bytes、zero bytes 等信息，方便之后重新加载。
+
+接下来是如何选择要淘汰的 frame。
+
+不是所有 frame 都适合被淘汰。例如，正在进行 I/O 的 frame 不能被淘汰，否则可能出现读写到一半页面被换走的问题。因此可以在 Frame Table 的表项中加入一个 `busy` 字段，只有当 `busy == false` 时，这个 frame 才能作为 eviction 的候选对象。比如在 syscall 读写用户 buffer、`mmap` 写回文件、swap in / swap out 等过程中，都可以临时将相关 frame 标记为 busy，避免它在关键操作中被淘汰。
+
+在选择具体 victim frame 时，可以实现一个简化版的 clock algorithm，也就是 second-chance algorithm。
+
+我们维护一个类似时钟指针的变量，在 Frame Table 中循环移动。每次检查当前 frame 时：
+
+1. 如果该 frame 是 busy，则跳过；
+2. 如果该 frame 的 accessed bit 为 true，说明它最近被访问过，就把 accessed bit 清成 false，然后跳过；
+3. 如果该 frame 的 accessed bit 为 false，说明它最近没有被访问，就选择它作为 victim frame。
+
+这里用到的 accessed bit 可以通过 `pagedir_is_accessed()` 检查，并通过 `pagedir_set_accessed()` 清除。这个算法的直觉是：最近访问过的页面先给一次机会，只有连续一段时间没被访问的页面才会被淘汰。
+
+页面被淘汰后，之后用户程序如果再次访问这个虚拟地址，就会触发 `page_fault`。这时 page fault handler 会去 Supplemental Page Table 中查找对应 entry，并根据 entry 中记录的信息恢复页面：
+
+- 如果页面是 file-backed 且没有被 swap，就重新从文件加载；
+- 如果页面在 swap 中，就分配新的 frame，并从对应 swap slot 读回；
+- 如果页面是合法的 stack growth，就创建新的 stack page；
+- 如果 SPT 中找不到对应页面，才说明这是非法访问，需要结束进程。
+
+这些就是 Project 3 的大概的思路。到这，你可以尝试跑**20**次`make clean && make check`，确保一切正常。
