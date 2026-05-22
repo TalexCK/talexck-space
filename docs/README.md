@@ -21,7 +21,7 @@ config:
       - index: "01"
         category: Class Project
         title: PintOS
-        link:
+        link: /docs/pintos/
         description: An educational operating system used for learning OS design and implementation. Worked on Threads, User Program, Virtual Memory, File System.
         tags:
           - C
