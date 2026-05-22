@@ -157,9 +157,12 @@ export default defineUserConfig({
      * @see https://theme-plume.vuejs.press/guide/features/comments/
      */
     comment: {
-      provider: 'Twikoo',
+      provider: 'Giscus', // "Artalk“ | "Giscus" | "Twikoo" | "Waline"
       comment: true,
-      envId: 'https://twikoo-talexck-space.vercel.app/',
+      repo: 'TalexCK/talexck-comment', 
+      repoId: 'R_kgDOSkvMXg', 
+      category: 'Announcements', 
+      categoryId: 'DIC_kwDOSkvMXs4C9mTA', 
     },
 
     /**
