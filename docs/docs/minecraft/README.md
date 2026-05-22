@@ -23,3 +23,4 @@ permalink: /docs/minecraft/
 准备工作:
 
 - [平台选择](./platform.md)
+- [服务器核心](./core-choice.md)
