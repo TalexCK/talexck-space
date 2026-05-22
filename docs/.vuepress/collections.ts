@@ -66,6 +66,15 @@ const zhMinecraftDocs = defineCollection({
       ],
     },
     {
+      text: '服务器生命周期',
+      icon: 'lucide:life-buoy',
+      collapsed: false,
+      items: [
+        { text: '运行服务器核心', link: 'run-server' },
+        { text: '服务器指令', link: 'server-command' },
+      ],
+    },
+    {
       text: 'Minigames',
       icon: 'lucide:cable',
       collapsed: false,
