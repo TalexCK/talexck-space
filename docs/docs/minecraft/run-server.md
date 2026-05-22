@@ -115,45 +115,46 @@ Invoke-Expression $Command
 
 此时我们需要打开 `eula.txt` 并把文件中的 `eula=false` 改成 `eula=true`，然后再次运行核心，我们会发现一个启动成功的 Minecraft 服务器，现在的文件目录应该是这样的：
 
-```
-.
-├── banned-ips.json
-├── banned-players.json
-├── bukkit.yml
-├── cache
-│   └── mojang_26.1.2.jar
-├── commands.yml
-├── config
-│   ├── paper-global.yml
-│   └── paper-world-defaults.yml
-├── eula.txt
-├── help.yml
-├── libraries
-│   └── ...
-├── logs
-│   ├── 2026-05-22-1.log.gz
-│   └── latest.log
-├── ops.json
-├── paper-26.1.2.jar
-├── permissions.yml
-├── plugins
-│   ├── bStats
-│   │   └── config.yml
-│   └── spark
-│       ├── config.json
-│       └── tmp
-│           └── about.txt
-├── server.properties
-├── spigot.yml
-├── start.sh
-├── usercache.json
-├── version_history.json
-├── versions
-│   └── 26.1.2
-│       └── paper-26.1.2.jar
-├── whitelist.json
-└── world
-    └── ...
-```
+::: file-tree
+
+- banned-ips.json
+- banned-players.json
+- bukkit.yml
+- cache
+  - mojang_26.1.2.jar
+- commands.yml
+- config
+  - paper-global.yml
+  - paper-world-defaults.yml
+- eula.txt
+- help.yml
+- libraries
+  - …
+- logs
+  - 2026-05-22-1.log.gz
+  - latest.log
+- ops.json
+- paper-26.1.2.jar
+- permissions.yml
+- plugins
+  - bStats
+    - config.yml
+  - spark
+    - config.json
+    - tmp
+      - about.txt
+- server.properties
+- spigot.yml
+- start.sh
+- usercache.json
+- version_history.json
+- versions
+  - 26.1.2
+    - paper-26.1.2.jar
+- whitelist.json
+- world
+  - …
+
+:::
 
 此时使用 Minecraft 26.1.2 就能进入服务器 ( ip: 127.0.0.1:25565 ) 了。
