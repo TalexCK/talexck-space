@@ -62,6 +62,7 @@ const zhMinecraftDocs = defineCollection({
       items: [
         { text: '平台选择', link: 'platform' },
         { text: '服务器核心', link: 'core-choice' },
+        { text: 'Java 选择', link: 'java' },
       ],
     },
     {

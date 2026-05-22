@@ -15,10 +15,12 @@ export const zhNavbar = defineNavbarConfig([
       {
         text: 'Minecraft 文档',
         items: [
-          {
-            text: '首页',
-            link: '/docs/minecraft/',
-          },
+          { text: '首页', link: '/docs/minecraft/',},
+          { text: 'MiniGame', link: '/docs/minecraft/minigames/',},
+          { text: '方块校园', link: '/docs/minecraft/school/',},
+          { text: '生存服', link: '/docs/minecraft/survival/',},
+          { text: 'GameVoting', link: '/docs/minecraft/gamevoting/',},
+          { text: 'WorldGit', link: '/docs/minecraft/worldgit/',},
         ],
       },
     ]

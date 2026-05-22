@@ -46,4 +46,4 @@ Linux 是长期运行 Minecraft 服务器时最常见的平台。它资源占用
 
 常见的 Linux 发行版包括 Debian、Ubuntu 和 NixOS。其中 Debian 和 Ubuntu 更适合大多数用户入门，NixOS 则更适合喜欢声明式配置和可复现部署的用户。
 
-文章后续教程将以 Debain 为例。
+文章后续教程将以 Debain 为例，但文章中重要的命令 / 脚本将提供 Windows 版本。

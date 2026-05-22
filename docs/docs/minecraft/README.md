@@ -24,3 +24,4 @@ permalink: /docs/minecraft/
 
 - [平台选择](./platform.md)
 - [服务器核心](./core-choice.md)
+- [Java 版本](./java.md)
