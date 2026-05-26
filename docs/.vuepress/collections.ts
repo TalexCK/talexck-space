@@ -75,11 +75,20 @@ const zhMinecraftDocs = defineCollection({
       ],
     },
     {
+      text: '服务器配置',
+      icon: 'lucide:table-properties',
+      collapsed: false,
+      items: [
+        { text: 'server.properties', link: 'server-properties' },
+      ],
+    },
+    {
       text: 'Minigames',
       icon: 'lucide:cable',
       collapsed: false,
       items: [
         { text: '首页', link: 'minigames/' },
+        { text: 'CloudNet 配置', link: 'minigames/cloudnet' },
       ],
     },
     {
@@ -92,10 +101,18 @@ const zhMinecraftDocs = defineCollection({
     },
     {
       text: '生存服',
-      icon: 'lucide:blocks',
+      icon: 'lucide:sofa',
       collapsed: false,
       items: [
         { text: '首页', link: 'survival/' },
+      ],
+    },
+    {
+      text: 'Bingo 服务器',
+      icon: 'lucide:grid-2x2',
+      collapsed: false,
+      items: [
+        { text: '首页', link: 'bingo/' },
       ],
     },
     {

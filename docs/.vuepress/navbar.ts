@@ -19,6 +19,7 @@ export const zhNavbar = defineNavbarConfig([
           { text: 'MiniGames', link: '/docs/minecraft/minigames/',},
           { text: '方块校园', link: '/docs/minecraft/school/',},
           { text: '生存服', link: '/docs/minecraft/survival/',},
+          { text: 'Bingo 服务器', link: '/docs/minecraft/bingo/',},
           { text: 'GameVoting', link: '/docs/minecraft/gamevoting/',},
           { text: 'WorldGit', link: '/docs/minecraft/worldgit/',},
         ],
