@@ -12,9 +12,6 @@ contributors:
 > [!INFO]
 > 本文为我在完成 ==ShanghaiTech CS130 project (Stanford CS140 project)== 时的学习与思考。
 
-> [!warning]
-> 为遵守 ShanghaiTech 学生学术诚信规范，各 project 的代码相关部分将在本 project 提交 ddl 结束后上传。
-
 ## 关于 project
 
 [Stanford CS140 Project](https://www.scs.stanford.edu/10wi-cs140/pintos/pintos_1.html#SEC1)
@@ -121,7 +118,36 @@ Project 2 需要能够让程序通过 System Call 与操作系统交互，让操
 
 完成 Project 2 的时候需要注意可能带来影响的 bug，因为未来 Project 3 和 Project 4 都将基于 Project 2 的代码实现。
 
-### System Call
+### Process Termination Messages
+
+文档要求所有用户进程退出时都打印形如 `name: exit(status)` 的信息。这里的退出并不只包括显式调用 `exit(status)`，也包括用户程序触发非法访问、非法指令等异常后被内核杀死。
+
+因此我们在线程结构中维护 `exit_status`：
+
+- 正常调用 `SYS_EXIT` 时，由 `sys_exit()` 写入用户传入的 status；
+- 用户指针非法、page fault 等异常退出时，统一通过 `exit_process_with_error()` 将状态设为 `-1`；
+- `process_exit()` 中如果当前线程确实运行过用户进程，就打印退出信息。
+
+`halt` 是一个例外。它会直接关闭 PintOS，不应该额外打印某个进程的退出信息。
+
+### Argument Passing
+
+用户程序最终会从 `_start(int argc, char *argv[])` 开始执行，如果用户栈上没有正确放置 `argc` 和 `argv`，程序一启动就会因为访问错误栈内容而 page fault。
+
+这里需要注意：传入 `process_execute()` 的 `file_name` 并不只是可执行文件名，而是完整命令行，例如 `echo x y`。因此我们需要先把命令行拆成两部分：
+
+1. 第一个 token 作为真正要加载的程序名，用于 `thread_create()` 和 `load()`；
+2. 全部 token 作为参数列表，用来构造用户栈。
+
+我们在 `process_execute()` 中先复制一份命令行，然后用 `strtok_r()` 取出第一个 token 作为线程名。真正构造栈的工作放在 `start_process()` 中完成：它会再次将完整命令行拆成 `argv`，调用 `load(argv[0], ...)` 加载可执行文件，加载成功后再开始向用户栈写入参数。
+
+栈的构造顺序需要符合 x86 的函数调用约定。由于栈向低地址增长，所以实现时大致是反着压入：
+
+![](https://image.honahec.cc/Screenshot%202026-05-22%20at%2014.40.31.png)
+
+最终用户程序看到的栈就像普通 C 函数调用一样，`main(argc, argv)` 可以直接读取参数。这里一个很容易犯错的地方是：不能把完整命令行传给 `load()`，否则系统会尝试打开名为 `echo x y` 的文件，而不是打开 `echo`。
+
+### System Calls
 
 PintOS 中，用户程序发起 system call 时，会把系统调用号和参数放在用户栈上。进入内核后，`syscall_handler()` 可以通过 `f->esp` 找到这些参数。
 
@@ -141,11 +167,11 @@ PintOS 中，用户程序发起 system call 时，会把系统调用号和参数
 
 - `user_read (void *kaddr, const void *uaddr, size_t size)`
 
-  从`uaddr`读入`size`长度的内容到`kaddr`，成功读入则返回`true`，反之返回`false`。
+  从 `uaddr` 读入 `size` 长度的内容到 `kaddr`，成功读入则返回 `true`，反之返回 `false`。
 
-- ``user_string (char *kaddr, const void *uaddr, size_t max_size)`
+- `user_string (char *kaddr, const void *uaddr, size_t max_size)`
 
-  从`uaddr`读入最多`max_size`长度的字符串到`kaddr`，成功读入则返回`true`，反之返回`false`。
+  从 `uaddr` 读入最多 `max_size` 长度的字符串到 `kaddr`，成功读入则返回 `true`，反之返回 `false`。
 
 借助这两个函数，大多数 syscall 在访问用户内存时，只需调用对应的辅助函数即可完成用户指针验证，而无需手动检查页表映射或地址合法性。
 
@@ -156,6 +182,18 @@ PintOS 中，用户程序发起 system call 时，会把系统调用号和参数
 这里比较重要的是文件描述符，也就是 fd。用户程序拿到的 fd 只是一个整数，而真正的文件对象是内核中的 `struct file *`。因此我们需要在每个进程中维护一个 fd table，用来把用户态的 fd 映射到内核态的文件对象。
 
 另外，所有涉及文件系统的操作都需要注意同步问题。PintOS 提供的文件系统本身并不是完全线程安全的，如果多个进程同时读写文件，可能会出现 race condition。因此我们使用一个全局的 `filesys_lock` 来保护文件系统操作。
+
+我们的实现中，`struct thread` 中维护了一个固定大小的 `fd_table[128]`：
+
+- `fd = 0` 表示标准输入，`read(0, ...)` 通过 `input_getc()` 从键盘读入；
+- `fd = 1` 表示标准输出，`write(1, ...)` 通过 `putbuf()` 写到控制台；
+- `fd >= 2` 才对应真正打开的文件，`open()` 会从 `2` 开始寻找空位。
+
+这样做的好处是查找 fd 非常直接，用户传入的 fd 可以直接作为数组下标访问。不过它也带来了一个固定上限：每个进程最多维护 128 个 fd。对于本 project 来说这个限制足够使用。
+
+文件相关 syscall 中还需要处理字符串指针。比如 `create`、`remove`、`open` 都会接收用户传入的文件名指针。我们不会直接把这个用户指针传入文件系统，而是先申请一页 kernel page，用 `user_string()` 把文件名复制到内核空间，再调用 `filesys_create()` / `filesys_open()` 等函数。这样即使用户传入了非法字符串，也只会终止当前用户进程，不会让文件系统拿到不可信地址。
+
+进程退出时，还需要扫描自己的 fd table，将所有未关闭的文件逐个 `file_close()`。否则即使用户程序忘记调用 `close()`，内核也应该回收对应资源。
 
 #### `process_wait` / `process_execute`
 
@@ -209,6 +247,20 @@ struct child_info {
 不过这里还需要考虑资源释放的问题。父进程和子进程的退出顺序是不确定的：可能父进程先退出，也可能子进程先退出。因此，`child_info` 不能简单地只由父进程或子进程单方面释放。
 
 为了解决这个问题，我们使用 `count` 作为引用计数。父进程和子进程各自持有一份对 `child_info` 的引用。当其中一方不再需要这个结构体时，就调用 `child_release()` 将 `count` 减一。只有当父进程和子进程都不再需要它，也就是 `count` 变为 `0` 时，才真正释放这个 `child_info` 结构体。
+
+### Denying Writes to Executables
+
+Project 2 还有一个容易忽略的要求：正在运行的可执行文件不能被写入。否则一个进程运行到一半，另一个进程把它的 executable 改掉，后续 Project 3 做 lazy loading 时会出现非常难判断的行为。
+
+PintOS 已经提供了 `file_deny_write()` 和 `file_allow_write()`。关键在于：不能在 `load()` 结束后立刻关闭 executable 文件。因为一旦关闭，deny write 的效果也会随之消失。
+
+因此我们的做法是在 `load()` 成功后：
+
+1. 将打开的 executable 文件保存在当前线程的 `runing_file` 中；
+2. 调用 `file_deny_write()` 禁止其他写入；
+3. 直到该进程退出时，再在 `process_exit()` 中关闭这个文件。
+
+这样 executable 在整个进程生命周期内都会保持打开和写保护状态。
 
 > [!WARNING]
 >
@@ -418,3 +470,117 @@ enum spt_type {
 - 如果 SPT 中找不到对应页面，才说明这是非法访问，需要结束进程。
 
 这些就是 Project 3 的大概的思路。到这，你可以尝试跑**20**次`make clean && make check`，确保一切正常。
+
+## Project4: File System
+
+[doc](https://www.scs.stanford.edu/10wi-cs140/pintos/pintos_5.html#SEC75)
+
+### Buffer cache
+
+目前，PintOS 访问文件系统时，总会直接从磁盘读写。
+
+众所周知地，从磁盘访存是极慢的，==我们迫切地需要一种缓存的机制提升读写效率，减少对磁盘的访问。==
+
+此部分，我们需要修改文件系统，使其保留文件块的缓存。当发起读取或写入某个块的请求时，先检查该块是否在缓存中；如果在，就直接使用缓存中的数据，而不访问磁盘。否则，就从磁盘把该块取入缓存，必要时驱逐一个较旧的缓存项。在此项目中，缓存大小不得超过 64 个扇区。
+
+由于缓存大小有限，我们需要一个淘汰算法来决定当缓存满时将哪个缓存写入磁盘空出，其复杂度应类似于 ==时钟算法==。
+
+可以想到，我们需要评估一个缓存是否还 “活着”，也就是说，它最近是否有被读写过？于是，类似于 Project3 的 Eviction 过程我们就是可以实现这个算法。
+
+同时我们需要一个 ==write_behind== 机制——内容保留在缓存中，必要时再写入磁盘。这是很好实现的，但重点是我们需要考虑到缓存机制实际降低了安全性，若文件系统崩溃，缓存的加入只会加重损失。
+
+于是我们需要一个线程，周期性地将缓存中的内容写入磁盘，同时，不要忘记再文件系统关闭时也要将所有内容写入。可以想象，==若周期过短，缓存效果将下降，若周期过长，安全性会下降==，这是这个工程上必然遇到的困境。
+
+为了加速读取，我们还可以设计一个 ==read_ahead== 机制——当某个线程请求读取磁盘中某个块时，它有很大概率会继续读取下一个块，我们 ==异步== 地将下一个块的内容提前写入缓存便可以加速读取。
+
+> [!TIP]
+>
+> 设计完这些，并通过 Project2 的测试点，本部分就收工啦！
+
+### Indexed and Extensible Files
+
+PintOS 原本的 inode 只记录一个起始 sector，并假设文件的数据块在磁盘上连续存放。这个设计很简单，但问题也很明显：文件无法增长，且磁盘碎片化后就可能找不到一段足够长的连续空间。
+
+我们需要把 inode 改成类似多级索引的结构。实现中，`inode_disk` 大致包含：
+
+- `direct[123]`：直接指向数据块；
+- `indirect`：指向一个一级间接块；
+- `doubly_indirect`：指向一个二级间接块；
+
+每个 sector 是 512 bytes，而一个 `block_sector_t` 是 4 bytes，所以一个间接块可以存 128 个 sector 编号。因此这个 inode 最多可以寻址：
+
+```txt
+123 + 128 + 128 * 128 = 16635 sectors
+16635 * 512 = 8517120 bytes
+```
+
+这已经超过 PintOS 默认 8MB 文件系统分区的大小。
+
+同时我们需要处理文件增长逻辑，当写操作到文件末尾时，便需要扩展 inode。扩展时需要逐个分配新的数据块，并把新 sector 清零。
+
+删除文件时也类似。原本 PintOS 只需要释放一段连续的 sector，现在需要沿着 direct、indirect、doubly indirect 把所有数据块和中间索引块都释放掉。因此可以实现一个内存回收函数进行统一回收。
+
+> [!WARNING]
+>
+> Project 4 的 inode 一定要保持刚好一个 sector 大小。每次往 `inode_disk` 里加字段，都应该重新确认 `sizeof (struct inode_disk) == BLOCK_SECTOR_SIZE`。
+
+### Subdirectories
+
+Project 4 还需要支持子目录。原本 PintOS 只在根目录里找文件，因此 `filesys_create()`、`filesys_open()`、`filesys_remove()` 都直接从 root directory 开始。加入子目录之后，路径解析就变成了问题之一。
+
+目录本质上也是一种文件，只是它的内容是一组 `dir_entry`。因此我们可以在 inode 里加一个 `is_dir` 字段，用来区分普通文件和目录。创建目录时，还需要自动加入两个特殊 entry：
+
+- `.` 指向自己；
+- `..` 指向父目录。
+
+这样一来，`cd .`、`cd ..` 等路径不需要特殊处理，正常走 `dir_lookup()` 就可以。
+
+路径解析可以拆成两个 helper：
+
+- `filesys_open_inode(path)`：一路解析完整路径，返回最后一个 component 对应的 inode；
+- `filesys_parent_dir(path, &dir, name)`：解析到最后一个 component 的父目录，把最后的文件名或目录名放进 `name`。
+
+绝对路径从 root directory 开始，相对路径从当前线程的 `cwd` 开始。因此每个 `thread` 需要保存一个 `struct dir *cwd`。创建子进程时用 `dir_reopen(parent->cwd)` 复制一份目录句柄，进程退出时再关闭它。
+
+> [!WARNING]
+>
+> 当前目录如果已经被删除，后续相对路径应该失败。否则你会得到一个看起来还能访问、但已经不在目录树里的 ~~滚木~~ 神秘目录。
+
+目录和普通文件还需要共用同一个 fd table。比较直接的做法是把 fd table 里的元素改成 `fd_entry`，其中同时保存 `struct file *file` 和 `struct dir *dir`，再用 `is_dir` 判断当前 fd 是文件还是目录。
+
+有了这个结构之后，就可以实现 Project 4 新增的几个 syscall：
+
+- `chdir`：打开目标 inode，确认它是目录，然后替换当前线程的 `cwd`；
+- `mkdir`：找到父目录，分配 inode sector，创建目录并加入父目录；
+- `readdir`：从目录 fd 中读取下一个 entry，注意跳过 `.` 和 `..`；
+- `isdir`：判断 fd 是否指向目录；
+- `inumber`：返回 fd 对应 inode 的 sector 编号。
+
+还需要注意 `open`。Project 2 中 `open` 默认只会返回普通文件；Project 4 中，打开目录也应该得到一个 fd，只是之后 `read`、`write` 这类普通文件操作需要拒绝目录 fd。
+
+删除目录时，需要明确规则：
+
+- 不能删除 `.` 和 `..`；
+- 不能删除 root directory；
+- 只能删除空目录，也就是除了 `.` 和 `..` 以外没有其他 entry；
+- 一个目录即使已经被打开，或者正被某个进程作为 `cwd`，也可以被删除。
+
+最后一点听起来有点奇怪，但实现上是合理的：目录从父目录中消失后，新的路径查找找不到它；已经打开的目录句柄则依靠 inode 的引用计数继续活着，直到最后一个 opener 关闭它。如果某个进程的 `cwd` 被删了，它之后的相对路径解析会失败，但仍然可以 `chdir` 到某个绝对路径，比如 `/`。
+
+### Synchronization
+
+> [!NOTE]
+>
+> 说实话我并没有额外花费任何精力在这里，因为如果 “规范” 地实现代码，在完成上面三个部分时本就不该出现同步问题。当然如果出现了我们可以如下考虑。
+
+比较朴素的方案：文件系统 syscall 继续由全局 `filesys_lock` 串行化。这样 create、remove、mkdir、文件增长等操作不会互相踩到一半完成的状态。
+
+Buffer cache 内部则需要更细的锁。全局 cache lock 负责查找 cache entry 和选择 victim，每个 cache entry 自己也有一个 lock，保护它的数据复制和 dirty/accessed 状态。选择 victim 时可以用 `lock_try_acquire()` 跳过正在被读写的 entry，避免把别人正在使用的缓存块驱逐掉。
+
+## 完结撒花
+
+评价上，我认为没有人会否认 Operating System 是一门==好课==，与所处学校无关。因为它确实通过 PintOS 这个 “教学系统” 让我们理解了操作系统==到底是怎么运行的==（当然这个说法很广，三言两语也很难言明），Project 本身远比课程、授课方式等其他因素重要的多。
+
+在一个人==事先有编程基础的前提==下，我认为也可以适当考虑在大一阶段就完成这门课程，一方面它对人底层理解的提升是显然的，另一方面它的 workload 的确没有特别大（个人认为），且在如今这个有 LLM 的时代，理解难度、英文水平、搜索能力的影响都被大幅度减弱了。
+
+Anyway，不管怎么样吧，到此为止，ShanghaiTech CS130 AKA Stanford CS140 的 Project 就全部完成啦，为避免 check 及测试环节损失不必要的分数，强烈建议在此时对每个 Project 都进行多次 `make check`。
