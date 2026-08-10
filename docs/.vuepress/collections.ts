@@ -89,6 +89,26 @@ const zhMinecraftDocs = defineCollection({
       items: [
         { text: '首页', link: 'minigames/' },
         { text: 'CloudNet 配置', link: 'minigames/cloudnet' },
+        { text: '方块竞速', link: 'minigames/blockracing' },
+        { text: '起床战争（旧版）', link: 'minigames/bedwar' },
+        { text: '起床战争（新版）', link: 'minigames/bedwars' },
+        { text: '空岛战争', link: 'minigames/skywars' },
+        { text: '蜂蜜导弹战争', link: 'minigames/honey-missile-war' },
+        { text: '幸运之柱', link: 'minigames/pillars-of-fortune' },
+        { text: 'Bingo', link: 'minigames/bingo' },
+        { text: '逃离疯子 2', link: 'minigames/maniac2' },
+        { text: '背刺', link: 'minigames/backstabbed' },
+        { text: 'Bleps', link: 'minigames/bleps' },
+        { text: '哈比列车', link: 'minigames/harpy-express' },
+        { text: '猫抓老鼠', link: 'minigames/cheese' },
+        { text: 'GScard', link: 'minigames/gscard' },
+        { text: '方块躲猫猫', link: 'minigames/hideandseek' },
+        { text: '小游戏合集', link: 'minigames/minigames-collection' },
+        { text: '超级像素派对', link: 'minigames/super-voxel-party' },
+        { text: 'Build Battle', link: 'minigames/build-battle' },
+        { text: '饥饿游戏', link: 'minigames/survival-game' },
+        { text: '雪地乱斗 2', link: 'minigames/snowy-skirmish-2' },
+        { text: 'Capture the Flag', link: 'minigames/ctf' },
       ],
     },
     {
@@ -97,6 +117,13 @@ const zhMinecraftDocs = defineCollection({
       collapsed: false,
       items: [
         { text: '首页', link: 'school/' },
+        { text: '部署', link: 'school/deploy' },
+        { text: '配置', link: 'school/config' },
+        { text: '插件', link: 'school/plugins' },
+        { text: '权限', link: 'school/permissions' },
+        { text: '建造流程', link: 'school/workflow' },
+        { text: '维护', link: 'school/maintenance' },
+        { text: '排障', link: 'school/troubleshooting' },
       ],
     },
     {
@@ -105,6 +132,9 @@ const zhMinecraftDocs = defineCollection({
       collapsed: false,
       items: [
         { text: '首页', link: 'survival/' },
+        { text: '部署', link: 'survival/deploy' },
+        { text: '配置', link: 'survival/config' },
+        { text: 'Mod', link: 'survival/mods' },
       ],
     },
     {
@@ -113,6 +143,12 @@ const zhMinecraftDocs = defineCollection({
       collapsed: false,
       items: [
         { text: '首页', link: 'bingo/' },
+        { text: '部署', link: 'bingo/deploy' },
+        { text: '配置', link: 'bingo/config' },
+        { text: 'Mod', link: 'bingo/mods' },
+        { text: '权限', link: 'bingo/permissions' },
+        { text: '运行流程', link: 'bingo/workflow' },
+        { text: '排障', link: 'bingo/troubleshooting' },
       ],
     },
     {
@@ -121,6 +157,10 @@ const zhMinecraftDocs = defineCollection({
       collapsed: false,
       items: [
         { text: '首页', link: 'gamevoting/' },
+        { text: '构建与部署', link: 'gamevoting/deploy' },
+        { text: '配置', link: 'gamevoting/config' },
+        { text: '命令与权限', link: 'gamevoting/commands-permissions' },
+        { text: '投票流程', link: 'gamevoting/workflow' },
       ],
     },
     {
@@ -129,6 +169,13 @@ const zhMinecraftDocs = defineCollection({
       collapsed: false,
       items: [
         { text: '首页', link: 'worldgit/' },
+        { text: '构建与部署', link: 'worldgit/deploy' },
+        { text: '配置', link: 'worldgit/config' },
+        { text: '可视化菜单', link: 'worldgit/menu' },
+        { text: '命令与权限', link: 'worldgit/commands-permissions' },
+        { text: '工作流', link: 'worldgit/workflow' },
+        { text: '主世界保护', link: 'worldgit/protection' },
+        { text: 'Web 与 AI', link: 'worldgit/web-ai' },
       ],
     },
   ],
