@@ -55,6 +55,12 @@ export default defineThemeConfig({
         Alex Tang
       </a>
       | 2026
+      |
+      <a href="https://beian.miit.gov.cn/"
+        target="_blank"
+        rel="noopener noreferrer">
+        苏ICP备2026049398号-1
+      </a>
     `,
   },
 
