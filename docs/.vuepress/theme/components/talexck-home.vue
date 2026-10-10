@@ -64,18 +64,20 @@ const awards = computed(() => props.awards || [])
 const blogButtonText = computed(() => props.blogText || 'VIEW BLOG')
 const blogButtonLink = computed(() => props.blogLink || '/blog/')
 
-const getSocialIcon = (link: HomeProfileLink) => {
-  if (link.icon) return link.icon
+// Built-in icons are inline so they follow the text color in day/night mode
+const getSocialIcon = (link: HomeProfileLink): 'github' | 'email' | 'link' => {
   const label = link.label.toLowerCase()
-  if (label.includes('github')) return 'https://api.iconify.design/line-md:github-loop.svg'
-  if (label.includes('mail') || label.includes('email')) return 'https://api.iconify.design/line-md:email.svg'
-  return '/icon.svg'
+  if (label.includes('github')) return 'github'
+  if (label.includes('mail')) return 'email'
+  return 'link'
 }
+
+const isExternal = (link: string) => /^(https?:)?\/\//.test(link)
 
 const handleCardClick = (link?: string) => {
   if (!link) return
 
-  if (/^(https?:)?\/\//.test(link)) {
+  if (isExternal(link)) {
     window.open(link, '_blank', 'noopener,noreferrer')
     return
   }
@@ -91,147 +93,110 @@ const handleCardClick = (link?: string) => {
     :background-attachment="backgroundAttachment"
     :full="full"
   >
-    <section class="talexck-home-container" aria-label="TalexCK Home">
-      <!-- Ambient background glow orbs -->
-      <div class="ambient-orb orb-1" aria-hidden="true"></div>
-      <div class="ambient-orb orb-2" aria-hidden="true"></div>
-      <div class="ambient-orb orb-3" aria-hidden="true"></div>
+    <section class="talexck-home" aria-label="TalexCK Home">
+      <div class="grid-bg" aria-hidden="true"></div>
 
       <div class="home-layout">
-        <!-- Left Column (30%) -->
+        <!-- Profile -->
         <aside class="side-panel">
-          <div class="sticky-wrapper">
-            <article class="profile-card circuit-card">
-              <!-- Card shimmer effect -->
-              <div class="card-shimmer" aria-hidden="true"></div>
-              <div class="avatar-wrapper">
-                <div class="avatar-ring" aria-hidden="true"></div>
-                <img class="avatar" :src="profile.avatar" :alt="profile.name">
-              </div>
-              <h1 class="name">{{ profile.name }}</h1>
-              <p class="role">{{ profile.role }}</p>
-              <p class="description">{{ profile.description }}</p>
-              <nav v-if="profile.links.length" class="social-links">
-                <a
-                  v-for="link in profile.links"
-                  :key="link.href"
-                  :href="link.href"
-                  target="_blank"
-                  rel="noreferrer"
-                  class="link-item"
-                  :title="link.label"
-                >
-                  <img :src="getSocialIcon(link)" :alt="link.label" class="social-svg">
-                </a>
-              </nav>
-              <!-- The Out-Node -->
-              <div class="connector-node right"><span class="node-ping" aria-hidden="true"></span></div>
-              <!-- Connection line to the central bus -->
-              <div class="profile-out-line">
-                <span class="line-flow" aria-hidden="true"></span>
-              </div>
-            </article>
-          </div>
+          <article class="frame profile-card">
+            <div class="window-bar">
+              <span>~/whoami</span>
+              <span class="status"><i aria-hidden="true"></i>online</span>
+            </div>
+            <div class="avatar-box">
+              <img class="avatar" :src="profile.avatar" :alt="profile.name">
+            </div>
+            <h1 class="name">{{ profile.name }}</h1>
+            <p class="role">{{ profile.role }}</p>
+            <p class="description">{{ profile.description }}</p>
+            <nav v-if="profile.links.length" class="social-links">
+              <a
+                v-for="link in profile.links"
+                :key="link.href"
+                :href="link.href"
+                :target="isExternal(link.href) ? '_blank' : undefined"
+                rel="noreferrer"
+                class="link-item"
+              >
+                <span class="link-label">
+                  <img v-if="link.icon" :src="link.icon" alt="" class="link-icon">
+                  <svg v-else-if="getSocialIcon(link) === 'github'" class="link-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.42-2.7 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z" /></svg>
+                  <svg v-else-if="getSocialIcon(link) === 'email'" class="link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>
+                  <svg v-else class="link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7" /><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" /></svg>
+                  {{ link.label }}
+                </span>
+                <svg class="arrow-ne" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9" /></svg>
+              </a>
+            </nav>
+          </article>
         </aside>
 
-        <!-- Right Column (70%) -->
+        <!-- Projects / Achievements on a vertical bus -->
         <main class="main-content">
-          <!-- Central Bus Line (Vertical Trunk) -->
-          <div class="vertical-bus">
-            <span class="bus-flow" aria-hidden="true"></span>
-          </div>
+          <div class="bus" aria-hidden="true"><span class="bus-flow"></span></div>
 
-          <div class="content-grid">
-            <!-- Projects Section -->
-            <section v-if="projects.length" class="section-group">
-              <h3 class="section-title">
-                <span class="section-title-icon" aria-hidden="true">◆</span>
-                Projects
-              </h3>
-              <div class="cards-stack">
-                <div 
-                  v-for="(project, index) in projects" 
-                  :key="project.title"
-                  class="card-entry"
-                  :style="{ '--entry-delay': index * 0.08 + 's' }"
-                >
-                  <!-- Branch line from Bus to Card -->
-                  <div class="branch-trace">
-                    <span class="line-flow" aria-hidden="true"></span>
-                  </div>
-                  <article
-                    class="project-card circuit-card smaller"
-                    :class="{ clickable: project.link }"
-                    :tabindex="project.link ? 0 : undefined"
-                    @click="handleCardClick(project.link)"
-                    @keydown.enter.prevent="handleCardClick(project.link)"
-                    @keydown.space.prevent="handleCardClick(project.link)"
-                  >
-                    <div class="card-shimmer" aria-hidden="true"></div>
-                    <div class="connector-node left"><span class="node-ping" aria-hidden="true"></span></div>
-                    <div class="card-header">
-                      <span v-if="project.index || index !== undefined" class="index">
-                        {{ project.index || (index + 1).toString().padStart(2, '0') }}
-                      </span>
-                      <span class="category">{{ project.category }}</span>
-                    </div>
-                    <h2 class="title">{{ project.title }}</h2>
-                    <p class="summary">{{ project.description }}</p>
-                    <div v-if="project.tags?.length" class="tags">
-                      <span v-for="tag in project.tags" :key="tag" class="tag">{{ tag }}</span>
-                    </div>
-                  </article>
-                </div>
+          <section v-if="projects.length" class="section-group">
+            <h2 class="section-title">
+              <b>projects/</b>{{ projects.length }} items
+            </h2>
+            <article
+              v-for="(project, index) in projects"
+              :key="project.title"
+              class="frame entry"
+              :class="{ clickable: project.link }"
+              :style="{ '--entry-delay': index * 0.08 + 's' }"
+              :tabindex="project.link ? 0 : undefined"
+              @click="handleCardClick(project.link)"
+              @keydown.enter.prevent="handleCardClick(project.link)"
+              @keydown.space.prevent="handleCardClick(project.link)"
+            >
+              <span class="wire" aria-hidden="true"></span>
+              <div class="entry-meta">
+                <span>
+                  {{ project.index || (index + 1).toString().padStart(2, '0') }}<template v-if="project.category"> · {{ project.category }}</template>
+                </span>
+                <span v-if="project.link" class="entry-go" aria-hidden="true">→</span>
               </div>
-            </section>
-
-            <!-- Awards Section -->
-            <section v-if="awards.length" class="section-group">
-              <h3 class="section-title">
-                <span class="section-title-icon" aria-hidden="true">◆</span>
-                Achievements
-              </h3>
-              <div class="cards-stack">
-                <div 
-                  v-for="(award, index) in awards" 
-                  :key="award.title"
-                  class="card-entry"
-                  :style="{ '--entry-delay': index * 0.08 + 's' }"
-                >
-                  <div class="branch-trace">
-                    <span class="line-flow" aria-hidden="true"></span>
-                  </div>
-                  <article
-                    class="award-card circuit-card smaller"
-                    :class="{ clickable: award.link }"
-                    :tabindex="award.link ? 0 : undefined"
-                    @click="handleCardClick(award.link)"
-                    @keydown.enter.prevent="handleCardClick(award.link)"
-                    @keydown.space.prevent="handleCardClick(award.link)"
-                  >
-                    <div class="card-shimmer" aria-hidden="true"></div>
-                    <div class="connector-node left"><span class="node-ping" aria-hidden="true"></span></div>
-                    <p v-if="award.eyebrow" class="eyebrow">{{ award.eyebrow }}</p>
-                    <h2 class="title">{{ award.title }}</h2>
-                    <p class="summary">{{ award.description }}</p>
-                    <div v-if="award.badge" class="badge">
-                      <span>{{ award.badge }}</span>
-                    </div>
-                  </article>
-                </div>
+              <h3 class="title">{{ project.title }}</h3>
+              <p class="summary">{{ project.description }}</p>
+              <div v-if="project.tags?.length" class="tags">
+                <span v-for="tag in project.tags" :key="tag" class="tag">{{ tag }}</span>
               </div>
-            </section>
+            </article>
+          </section>
 
-          </div>
+          <section v-if="awards.length" class="section-group">
+            <h2 class="section-title">
+              <b>achievements/</b>{{ awards.length }} items
+            </h2>
+            <article
+              v-for="(award, index) in awards"
+              :key="award.title"
+              class="frame entry"
+              :class="{ clickable: award.link }"
+              :style="{ '--entry-delay': index * 0.08 + 's' }"
+              :tabindex="award.link ? 0 : undefined"
+              @click="handleCardClick(award.link)"
+              @keydown.enter.prevent="handleCardClick(award.link)"
+              @keydown.space.prevent="handleCardClick(award.link)"
+            >
+              <span class="wire" aria-hidden="true"></span>
+              <div class="entry-meta">
+                <span>{{ award.eyebrow || 'award' }}</span>
+                <span v-if="award.badge" class="badge">[{{ award.badge }}]</span>
+              </div>
+              <h3 class="title">{{ award.title }}</h3>
+              <p class="summary">{{ award.description }}</p>
+            </article>
+          </section>
+
+          <a :href="blogButtonLink" class="blog-button">
+            <span class="prompt" aria-hidden="true">$</span>
+            <span>{{ blogButtonText }}</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
+          </a>
         </main>
-      </div>
-
-      <!-- Footer Action Button -->
-      <div class="footer-actions">
-        <a :href="blogButtonLink" class="blog-button">
-          <span>{{ blogButtonText }}</span>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
-        </a>
       </div>
     </section>
   </VPHomeBox>
@@ -239,597 +204,452 @@ const handleCardClick = (link?: string) => {
 
 <style scoped>
 /* ========================================
-   Design Tokens
+   Design Tokens (white / black + plume brand)
    ======================================== */
-.talexck-home-container {
-  --circuit-line: rgba(120, 120, 140, 0.25);
-  --circuit-accent: var(--vp-c-brand);
-  --circuit-accent-rgb: 100, 108, 255; /* fallback, override by theme */
-  --card-bg: rgba(255, 255, 255, 0.6);
-  --card-bg-hover: rgba(255, 255, 255, 0.85);
-  --card-border: rgba(120, 120, 140, 0.15);
-  --card-border-hover: var(--circuit-accent);
-  --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.06);
-  --card-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.06);
-  --bus-gap: 80px;
-  --branch-w: 40px;
-  --profile-wire-y: 205px;
-  --glass-blur: 16px;
+.talexck-home {
+  --ink: #0a0a0a;
+  --ink-2: #52525b;
+  --ink-3: #a1a1aa;
+  --paper: var(--vp-c-bg);
+  --paper-soft: var(--vp-c-bg-soft);
+  --rule: #e4e4e7;
+  --accent: var(--vp-c-brand-1);
+  --accent-soft: var(--vp-c-brand-soft);
+  --mono: var(--vp-font-family-mono);
+  --bus-gap: 40px;
 
   position: relative;
-  max-width: 1320px;
+  width: 100%;
+  min-width: 0;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 80px 24px;
+  padding: 40px 0 56px;
   box-sizing: border-box;
-  overflow: hidden;
+  color: var(--ink);
 }
 
-/* ========================================
-   Ambient Background Orbs
-   ======================================== */
-.ambient-orb {
+[data-theme="dark"] .talexck-home {
+  --ink: #fafafa;
+  --ink-2: #a1a1aa;
+  --ink-3: #52525b;
+  --rule: #2a2a2e;
+}
+
+/* Faint blueprint grid, fading out from the top-left */
+.grid-bg {
   position: absolute;
-  border-radius: 50%;
-  filter: blur(100px);
-  opacity: 0.18;
+  inset: -48px;
+  background-image:
+    linear-gradient(var(--rule) 1px, transparent 1px),
+    linear-gradient(90deg, var(--rule) 1px, transparent 1px);
+  background-size: 32px 32px;
+  -webkit-mask-image: radial-gradient(ellipse closest-side at 40% 40%, #000 35%, transparent 100%);
+  mask-image: radial-gradient(ellipse closest-side at 40% 40%, #000 35%, transparent 100%);
+  opacity: 0.7;
   pointer-events: none;
   z-index: 0;
-  animation: orb-drift 20s ease-in-out infinite alternate;
-}
-.orb-1 {
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, var(--circuit-accent), transparent 70%);
-  top: -100px;
-  left: -100px;
-  animation-delay: 0s;
-}
-.orb-2 {
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, #a78bfa, transparent 70%);
-  bottom: -80px;
-  right: -60px;
-  animation-delay: -7s;
-}
-.orb-3 {
-  width: 350px;
-  height: 350px;
-  background: radial-gradient(circle, #34d399, transparent 70%);
-  top: 40%;
-  left: 50%;
-  animation-delay: -13s;
 }
 
-@keyframes orb-drift {
-  0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(40px, -30px) scale(1.1); }
-}
-
-/* ========================================
-   Layout
-   ======================================== */
 .home-layout {
-  display: grid;
-  grid-template-columns: 3.2fr 6.8fr;
-  gap: var(--bus-gap);
   position: relative;
-  z-index: 2;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  gap: 72px;
   align-items: start;
 }
 
 /* ========================================
-   Glassmorphism Card Base
+   Frame: square card with corner brackets
    ======================================== */
-.circuit-card {
-  background: var(--card-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--card-border);
-  border-radius: 20px;
-  padding: 36px;
+.frame {
   position: relative;
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  box-shadow: var(--card-shadow);
-  overflow: hidden;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
 }
 
-.circuit-card.clickable {
-  cursor: pointer;
-}
-
-.circuit-card.clickable:hover,
-.circuit-card.clickable:focus-visible {
-  border-color: var(--card-border-hover);
-  transform: translateY(-6px);
-  box-shadow: var(--card-shadow-hover);
-  background: var(--card-bg-hover);
-}
-
-.circuit-card.smaller {
-  padding: 24px 28px;
-}
-
-/* Card shimmer / top-edge highlight */
-.card-shimmer {
+.frame::before,
+.frame::after {
+  content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.5) 30%,
-    rgba(255, 255, 255, 0.8) 50%,
-    rgba(255, 255, 255, 0.5) 70%,
-    transparent
-  );
-  opacity: 0.6;
-  pointer-events: none;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid var(--ink);
+  transition: border-color 0.25s ease;
+}
+
+.frame::before {
+  top: -1px;
+  left: -1px;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.frame::after {
+  right: -1px;
+  bottom: -1px;
+  border-left: 0;
+  border-top: 0;
 }
 
 /* ========================================
-   Left Column – Profile Card
+   Profile
    ======================================== */
 .side-panel {
-  height: 100%;
-}
-.sticky-wrapper {
-  position: static;
-}
-.profile-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+  position: sticky;
+  top: calc(var(--vp-nav-height, 64px) + 24px);
 }
 
-/* Horizontal line from profile to bus */
-.profile-out-line {
-  position: absolute;
-  top: var(--profile-wire-y);
-  left: 100%;
-  width: var(--branch-w);
-  height: 2px;
-  background: var(--circuit-line);
-  z-index: 1;
-  overflow: hidden;
+.profile-card {
+  padding: 0 28px 28px;
+}
+
+.window-bar {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 -28px 28px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+}
+
+.status i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: blink 2.4s ease-in-out infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0.3; }
+}
+
+.avatar-box {
+  width: 96px;
+  height: 96px;
+  display: grid;
+  place-items: center;
+  background: var(--paper-soft);
+  border: 1px solid var(--rule);
+}
+
+.avatar {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
+.name {
+  margin: 24px 0 6px;
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+
+.role {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.role::before {
+  content: '> ';
+  color: var(--ink-3);
+}
+
+.description {
+  margin: 18px 0 24px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--ink-2);
+}
+
+.social-links {
+  display: grid;
+  gap: 8px;
+}
+
+.link-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  border: 1px solid var(--rule);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink) !important;
+  text-decoration: none !important;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.link-item:hover {
+  border-color: var(--ink);
+  background: var(--paper-soft);
+}
+
+.link-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.link-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.arrow-ne {
+  width: 16px;
+  height: 16px;
+  color: var(--ink-3);
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.link-item:hover .arrow-ne {
+  color: var(--accent);
+  transform: translate(2px, -2px);
 }
 
 /* ========================================
-   Right Column
+   Bus + entries
    ======================================== */
 .main-content {
   position: relative;
-  height: auto;
-  min-height: 0;
-  overflow: visible;
+  padding-left: var(--bus-gap);
 }
 
-/* The Vertical Bus Line (Trunk) */
-.vertical-bus {
+.bus {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: calc(var(--branch-w) * -1);
-  width: 2px;
-  background: var(--circuit-line);
-  z-index: 1;
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-/* Flowing light animation on lines */
-.line-flow {
-  position: absolute;
-  display: block;
-  width: 100%;
-  height: 100%;
-  top: 0;
+  top: 8px;
+  bottom: 24px;
   left: 0;
-}
-
-.profile-out-line .line-flow,
-.branch-trace .line-flow {
-  background: linear-gradient(90deg, transparent 0%, var(--circuit-accent) 50%, transparent 100%);
-  animation: flow-h 3s ease-in-out infinite;
-  opacity: 0;
+  width: 1px;
+  background: var(--ink-3);
+  overflow: hidden;
 }
 
 .bus-flow {
   position: absolute;
-  display: block;
-  top: 0;
   left: 0;
+  top: 0;
   width: 100%;
-  height: 40px;
-  background: linear-gradient(180deg, transparent 0%, var(--circuit-accent) 50%, transparent 100%);
-  animation: flow-v 4s ease-in-out infinite;
-  opacity: 0.6;
+  height: 96px;
+  background: linear-gradient(transparent, var(--accent), transparent);
+  animation: bus-flow 5s linear infinite;
 }
 
-@keyframes flow-h {
-  0% { transform: translateX(-100%); opacity: 0; }
-  30% { opacity: 0.8; }
-  70% { opacity: 0.8; }
-  100% { transform: translateX(100%); opacity: 0; }
+@keyframes bus-flow {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(1200px); }
 }
 
-@keyframes flow-v {
-  0% { transform: translateY(-100%); opacity: 0; }
-  30% { opacity: 0.6; }
-  70% { opacity: 0.6; }
-  100% { transform: translateY(calc(100vh)); opacity: 0; }
-}
-
-.content-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 60px;
-  height: auto;
-  max-height: none;
-  overflow: visible;
-}
-
-.card-entry {
-  position: relative;
-}
-
-/* Branch line from Bus to each Right Card */
-.branch-trace {
-  position: absolute;
-  top: 50%;
-  left: calc(var(--branch-w) * -1);
-  width: var(--branch-w);
-  height: 2px;
-  background: var(--circuit-line);
-  z-index: 1;
-  overflow: hidden;
-}
-
-/* ========================================
-   Connector Nodes (with pulse)
-   ======================================== */
-.connector-node {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  background: var(--circuit-line);
-  border: 2px solid var(--card-bg);
-  border-radius: 50%;
-  z-index: 5;
-  transition: all 0.4s ease;
-}
-
-.node-ping {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  border: 1.5px solid var(--circuit-accent);
-  transform: translate(-50%, -50%) scale(1);
-  opacity: 0;
-  animation: node-pulse 3s ease-out infinite;
-  pointer-events: none;
-}
-
-@keyframes node-pulse {
-  0% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
-  100% { transform: translate(-50%, -50%) scale(3.5); opacity: 0; }
-}
-
-.profile-card .connector-node.right {
-  top: var(--profile-wire-y);
-  right: -6px;
-  transform: translateY(-50%);
-}
-.connector-node.left {
-  top: 50%;
-  left: -6px;
-  transform: translateY(-50%);
-}
-
-.circuit-card:hover .connector-node {
-  background: var(--circuit-accent);
-  border-color: var(--circuit-accent);
-  box-shadow: 0 0 14px rgba(var(--circuit-accent-rgb), 0.5);
-}
-
-/* ========================================
-   Avatar
-   ======================================== */
-.avatar-wrapper {
-  width: 120px;
-  height: 120px;
-  border-radius: 24px;
-  background: var(--vp-c-bg-soft);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 24px;
-  border: 1px solid var(--vp-c-divider);
-  overflow: hidden;
-  position: relative;
-}
-
-.avatar-ring {
-  position: absolute;
-  inset: -3px;
-  border-radius: 27px;
-  border: 2px solid transparent;
-  background: linear-gradient(135deg, var(--circuit-accent), #a78bfa, #34d399) border-box;
-  -webkit-mask:
-    linear-gradient(#fff 0 0) padding-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity 0.5s ease;
-  pointer-events: none;
-}
-
-.profile-card:hover .avatar-ring {
-  opacity: 1;
-}
-
-.avatar {
-  width: 100px;
-  height: 100px;
-  object-fit: contain;
-}
-
-/* ========================================
-   Typography
-   ======================================== */
-.name {
-  margin: 0;
-  font-size: 32px;
-  font-weight: 800;
-  color: var(--vp-c-text-1);
-  letter-spacing: -0.02em;
-}
-
-.role {
-  font-size: 13px;
-  color: var(--circuit-accent);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  margin: 14px 0 18px;
-  padding: 4px 14px;
-  border-radius: 20px;
-  background: rgba(var(--circuit-accent-rgb), 0.08);
-  display: inline-block;
-}
-
-.description {
-  font-size: 15px;
-  color: var(--vp-c-text-2);
-  line-height: 1.7;
-  margin-bottom: 24px;
-}
-
-/* ========================================
-   Social Links
-   ======================================== */
-.social-links {
-  display: flex;
-  gap: 14px;
-}
-
-.link-item {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: var(--vp-c-bg-soft);
-  border: 1px solid var(--vp-c-divider);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-}
-
-.link-item:hover {
-  border-color: var(--circuit-accent);
-  background: rgba(var(--circuit-accent-rgb), 0.08);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(var(--circuit-accent-rgb), 0.15);
-}
-
-.social-svg {
-  width: 22px;
-  height: 22px;
-  opacity: 0.75;
-  transition: opacity 0.3s ease;
-}
-
-.link-item:hover .social-svg {
-  opacity: 1;
-}
-
-/* ========================================
-   Section
-   ======================================== */
-.section-group {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+.section-group + .section-group {
+  margin-top: 48px;
 }
 
 .section-title {
-  font-size: 12px;
-  text-transform: uppercase;
-  color: var(--vp-c-text-3);
-  margin-left: 12px;
-  letter-spacing: 0.16em;
-  font-weight: 600;
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  margin: 0 0 20px;
+  padding: 0;
+  border: 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1;
+  color: var(--ink-2);
 }
 
-.section-title-icon {
-  font-size: 8px;
-  color: var(--circuit-accent);
-  opacity: 0.7;
+/* Square node on the bus */
+.section-title::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--bus-gap) * -1 - 4px);
+  width: 9px;
+  height: 9px;
+  background: var(--ink);
 }
 
-.cards-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+.section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
 }
 
-/* ========================================
-   Card Content
-   ======================================== */
-.card-header {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  margin-bottom: 4px;
-}
-
-.index {
-  font-size: 13px;
+.section-title b {
+  color: var(--ink);
   font-weight: 700;
-  color: var(--circuit-accent);
-  font-variant-numeric: tabular-nums;
-  opacity: 0.7;
 }
 
-.category {
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--vp-c-text-3);
+.entry {
+  margin-bottom: 16px;
+  padding: 22px 26px;
+  animation: entry-in 0.5s ease both;
+  animation-delay: var(--entry-delay, 0s);
 }
 
-.eyebrow {
+@keyframes entry-in {
+  from { opacity: 0; transform: translateY(8px); }
+}
+
+/* Branch from the bus to the card */
+.wire {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--bus-gap) * -1 - 1px);
+  width: var(--bus-gap);
+  height: 1px;
+  background: var(--ink-3);
+  transition: background 0.25s ease;
+}
+
+.wire::after {
+  content: '';
+  position: absolute;
+  right: -4px;
+  top: -3.5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--paper);
+  border: 1px solid var(--ink-3);
+  transition: all 0.25s ease;
+}
+
+.entry.clickable {
+  cursor: pointer;
+}
+
+.entry.clickable:hover,
+.entry.clickable:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  transform: translateX(4px);
+  box-shadow: 0 10px 30px -18px var(--accent);
+}
+
+.entry.clickable:hover::before,
+.entry.clickable:hover::after,
+.entry.clickable:focus-visible::before,
+.entry.clickable:focus-visible::after {
+  border-color: var(--accent);
+}
+
+.entry.clickable:hover .wire,
+.entry.clickable:focus-visible .wire {
+  background: var(--accent);
+}
+
+.entry.clickable:hover .wire::after,
+.entry.clickable:focus-visible .wire::after {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+.entry-meta {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
   font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--vp-c-text-3);
-  margin-bottom: 4px;
+  color: var(--ink-3);
+}
+
+.entry-go,
+.badge {
+  color: var(--accent);
+}
+
+.entry-go {
+  transition: transform 0.25s ease;
+}
+
+.entry.clickable:hover .entry-go {
+  transform: translateX(4px);
 }
 
 .title {
+  margin: 10px 0 8px;
+  padding: 0;
+  border: 0;
   font-size: 22px;
   font-weight: 700;
-  color: var(--vp-c-text-1);
-  margin-bottom: 10px;
+  line-height: 1.3;
   letter-spacing: -0.01em;
-  transition: color 0.3s ease;
-}
-
-.circuit-card.clickable:hover .title {
-  color: var(--circuit-accent);
+  color: var(--ink);
 }
 
 .summary {
-  font-size: 14px;
-  color: var(--vp-c-text-2);
+  margin: 0;
+  font-size: 14.5px;
   line-height: 1.7;
-  margin-bottom: 18px;
+  color: var(--ink-2);
 }
 
-/* ========================================
-   Tags
-   ======================================== */
 .tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-}
-
-.tag {
-  font-size: 11px;
-  padding: 4px 12px;
-  border-radius: 20px;
-  background: rgba(var(--circuit-accent-rgb), 0.06);
-  border: 1px solid rgba(var(--circuit-accent-rgb), 0.12);
-  color: var(--vp-c-text-2);
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  transition: all 0.3s ease;
-}
-
-.circuit-card:hover .tag {
-  border-color: rgba(var(--circuit-accent-rgb), 0.25);
-  background: rgba(var(--circuit-accent-rgb), 0.1);
-}
-
-/* ========================================
-   Badge
-   ======================================== */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  background: rgba(var(--circuit-accent-rgb), 0.08);
-  padding: 6px 16px;
-  border-radius: 20px;
+  gap: 10px;
+  margin-top: 14px;
+  font-family: var(--mono);
   font-size: 12px;
-  font-weight: 700;
-  color: var(--circuit-accent);
-  border: 1px solid rgba(var(--circuit-accent-rgb), 0.15);
-  letter-spacing: 0.06em;
+  color: var(--ink-2);
+}
+
+.tag::before {
+  content: '#';
+  color: var(--accent);
 }
 
 /* ========================================
-   Footer / Blog Button
+   Blog button
    ======================================== */
-.footer-actions {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-  padding-top: 56px;
-  position: relative;
-  z-index: 2;
-}
-
 .blog-button {
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 32px;
-  background: linear-gradient(135deg, var(--circuit-accent), #a78bfa);
-  color: white !important;
-  border-radius: 14px;
+  margin-top: 32px;
+  padding: 15px 24px;
+  background: var(--ink);
+  color: var(--paper) !important;
+  font-family: var(--mono);
+  font-size: 13px;
   font-weight: 700;
-  font-size: 14px;
-  text-decoration: none !important;
   letter-spacing: 0.06em;
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  box-shadow: 0 4px 20px rgba(var(--circuit-accent-rgb), 0.25);
-  position: relative;
-  overflow: hidden;
+  text-decoration: none !important;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
-.blog-button::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%);
-  transform: translateX(-100%);
-  transition: transform 0.6s ease;
-}
-
-.blog-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 32px rgba(var(--circuit-accent-rgb), 0.35);
-}
-
-.blog-button:hover::before {
-  transform: translateX(100%);
+.blog-button .prompt {
+  color: var(--accent);
 }
 
 .blog-button svg {
-  transition: transform 0.3s ease;
+  transition: transform 0.25s ease;
+}
+
+.blog-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 4px 4px 0 var(--accent);
 }
 
 .blog-button:hover svg {
@@ -840,64 +660,47 @@ const handleCardClick = (link?: string) => {
    Responsive
    ======================================== */
 @media (max-width: 960px) {
-  .talexck-home-container {
-    padding: 40px 16px;
+  .talexck-home {
+    padding: 16px 0 32px;
   }
+
+  .grid-bg {
+    inset: 0;
+  }
+
   .home-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 40px;
   }
-  .connector-node,
-  .vertical-bus,
-  .branch-trace,
-  .card-entry::before,
-  .profile-out-line {
+
+  .side-panel {
+    position: static;
+  }
+
+  .main-content {
+    padding-left: 0;
+  }
+
+  .bus,
+  .wire,
+  .section-title::before {
     display: none;
   }
-  .ambient-orb {
-    opacity: 0.1;
-  }
 }
 
-/* ========================================
-   Dark Mode Overrides
-   ======================================== */
-:global(html.dark) .talexck-home-container {
-  --circuit-line: rgba(255, 255, 255, 0.1);
-  --card-bg: rgba(30, 30, 40, 0.6);
-  --card-bg-hover: rgba(35, 35, 50, 0.8);
-  --card-border: rgba(255, 255, 255, 0.08);
-  --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.3);
-  --card-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.25);
-}
-
-:global(html.dark) .card-shimmer {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.06) 30%,
-    rgba(255, 255, 255, 0.12) 50%,
-    rgba(255, 255, 255, 0.06) 70%,
-    transparent
-  );
-  opacity: 1;
-}
-
-:global(html.dark) .ambient-orb {
-  opacity: 0.08;
-}
-
-/* Reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
-  .ambient-orb,
+  .status i,
   .bus-flow,
-  .line-flow,
-  .node-ping {
+  .entry {
     animation: none !important;
   }
-  .circuit-card,
+
+  .frame,
+  .link-item,
   .blog-button,
-  .link-item {
+  .blog-button svg,
+  .entry-go,
+  .arrow-ne {
     transition: none !important;
   }
 }
